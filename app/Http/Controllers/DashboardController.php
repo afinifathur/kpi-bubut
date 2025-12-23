@@ -2,46 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\DailyKpiOperator;
-use App\Models\DailyKpiMachine;
-use App\Models\ProductionLog;
-use App\Models\DowntimeLog;
-use Carbon\Carbon;
+use App\Models\MdMachineMirror;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Ambil tanggal terakhir yang ada KPI operator
-        $date = DailyKpiOperator::max('kpi_date');
+        // ===== MACHINE STATUS (BARU) =====
+        $machines = MdMachineMirror::orderBy('department_code')
+            ->orderBy('code')
+            ->get();
 
-        if (!$date) {
-            return view('dashboard', ['empty' => true]);
-        }
+        $machineSummary = [
+            'ONLINE'  => MdMachineMirror::where('runtime_status', 'ONLINE')->count(),
+            'STALE'   => MdMachineMirror::where('runtime_status', 'STALE')->count(),
+            'OFFLINE' => MdMachineMirror::where('runtime_status', 'OFFLINE')->count(),
+        ];
 
-        $avgKpiOperator = DailyKpiOperator::where('kpi_date', $date)
-            ->avg('kpi_percent');
+        // ===== LEGACY DASHBOARD DATA =====
+        // Contoh (sesuaikan dengan project Anda)
+        $legacyData = [
+            // misal:
+            // 'today_output' => Production::today()->sum('qty'),
+            // 'downtime' => Downtime::today()->count(),
+        ];
 
-        $avgKpiMachine = DailyKpiMachine::where('kpi_date', $date)
-            ->avg('kpi_percent');
-
-        $totalOutput = ProductionLog::where('production_date', $date)
-            ->sum('actual_qty');
-
-        $totalDowntime = DowntimeLog::where('downtime_date', $date)
-            ->sum('duration_minutes');
-
-        $activeOperators = DailyKpiOperator::where('kpi_date', $date)->count();
-        $activeMachines  = DailyKpiMachine::where('kpi_date', $date)->count();
-
-        return view('dashboard', compact(
-            'date',
-            'avgKpiOperator',
-            'avgKpiMachine',
-            'totalOutput',
-            'totalDowntime',
-            'activeOperators',
-            'activeMachines'
+        return view('dashboard.index', compact(
+            'machines',
+            'machineSummary',
+            'legacyData'
         ));
     }
 }

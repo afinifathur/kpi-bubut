@@ -329,7 +329,45 @@ body {
 label {
     font-weight: 500;
 }
-a[disabled] {
-    pointer-events: none;
-    opacity: 0.6;
+/* =========================
+   PRINT MODE
+========================= */
+@media print {
+
+    body {
+        background: #ffffff !important;
+        color: #000000;
+        font-size: 12px;
+    }
+
+    /* Hilangkan sidebar & tombol */
+    aside,
+    button,
+    .no-print {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    .kpi-card {
+        box-shadow: none !important;
+        border: 1px solid #e5e7eb;
+        page-break-inside: avoid;
+    }
+
+    table {
+        border-spacing: 0 !important;
+    }
+
+    thead th {
+        background: #f1f5f9 !important;
+        color: #000;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+
 }

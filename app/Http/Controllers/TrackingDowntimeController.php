@@ -30,7 +30,7 @@ class TrackingDowntimeController extends Controller
          */
         $list = DowntimeLog::whereDate('downtime_date', $date)
             ->orderBy('machine_code')
-            ->orderBy('time_start')
+            ->orderBy('duration_minutes')
             ->get();
 
         /**

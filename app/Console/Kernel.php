@@ -8,30 +8,40 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     /**
-     * Define the application's command schedule.
+     * Daftar command Artisan custom.
      */
-   protected function schedule(Schedule $schedule): void
-{
-    // 16:30 → Generate KPI harian (H-1)
-    $schedule->command('kpi:generate-daily')
-        ->dailyAt('16:30')
-        ->withoutOverlapping();
-
-    // 16:40 → Export CSV KPI
-    $schedule->command('kpi:export-csv')
-        ->dailyAt('16:40')
-        ->withoutOverlapping();
-
-    // Auto cek
-    $schedule->command('kpi:auto-export')
-    ->everyThirtyMinutes()
-    ->withoutOverlapping();
-
-}
-
+    protected $commands = [
+        \App\Console\Commands\PullMasterMachines::class,
+    ];
 
     /**
-     * Register the commands for the application.
+     * Definisi penjadwalan command.
+     */
+    protected function schedule(Schedule $schedule): void
+    {
+        // 16:30 - Generate KPI harian (H-1)
+        $schedule->command('kpi:generate-daily')
+            ->dailyAt('16:30')
+            ->withoutOverlapping();
+
+        // 16:40 - Export CSV KPI
+        $schedule->command('kpi:export-csv')
+            ->dailyAt('16:40')
+            ->withoutOverlapping();
+
+        // Auto export KPI setiap 30 menit
+        $schedule->command('kpi:auto-export')
+            ->everyThirtyMinutes()
+            ->withoutOverlapping();
+
+        // Pull master machines setiap 5 menit
+        $schedule->command('pull:master-machines')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
+    }
+
+    /**
+     * Register command console.
      */
     protected function commands(): void
     {

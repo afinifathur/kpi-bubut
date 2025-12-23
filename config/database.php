@@ -112,6 +112,21 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
+		
+		'master' => [
+		'driver' => 'mysql',
+		'host' => env('MASTER_DB_HOST'),
+		'port' => env('MASTER_DB_PORT'),
+		'database' => env('MASTER_DB_DATABASE'),
+		'username' => env('MASTER_DB_USERNAME'),
+		'password' => env('MASTER_DB_PASSWORD'),
+		'charset' => 'utf8mb4',
+		'collation' => 'utf8mb4_unicode_ci',
+		'prefix' => '',
+		'strict' => true,
+		'engine' => 'InnoDB',
+		],
+
 
     ],
 
