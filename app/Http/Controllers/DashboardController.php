@@ -8,23 +8,37 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // ===== MACHINE STATUS (BARU) =====
-        $machines = MdMachineMirror::orderBy('department_code')
+        /*
+        |--------------------------------------------------------------------------
+        | MACHINE STATUS (ACTIVE ONLY)
+        |--------------------------------------------------------------------------
+        */
+        $machines = MdMachineMirror::where('status', 'active')
+            ->orderBy('department_code')
             ->orderBy('code')
             ->get();
 
         $machineSummary = [
-            'ONLINE'  => MdMachineMirror::where('runtime_status', 'ONLINE')->count(),
-            'STALE'   => MdMachineMirror::where('runtime_status', 'STALE')->count(),
-            'OFFLINE' => MdMachineMirror::where('runtime_status', 'OFFLINE')->count(),
+            'ONLINE' => MdMachineMirror::where('status', 'active')
+                ->where('runtime_status', 'ONLINE')
+                ->count(),
+
+            'STALE' => MdMachineMirror::where('status', 'active')
+                ->where('runtime_status', 'STALE')
+                ->count(),
+
+            'OFFLINE' => MdMachineMirror::where('status', 'active')
+                ->where('runtime_status', 'OFFLINE')
+                ->count(),
         ];
 
-        // ===== LEGACY DASHBOARD DATA =====
-        // Contoh (sesuaikan dengan project Anda)
+        /*
+        |--------------------------------------------------------------------------
+        | LEGACY DASHBOARD DATA
+        |--------------------------------------------------------------------------
+        */
         $legacyData = [
-            // misal:
-            // 'today_output' => Production::today()->sum('qty'),
-            // 'downtime' => Downtime::today()->count(),
+            // tetap seperti sebelumnya
         ];
 
         return view('dashboard.index', compact(

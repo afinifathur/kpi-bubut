@@ -30,6 +30,7 @@ class KpiBubutService
             $productions->first()->item_code
         );
 
+        // 🔒 FAIL-SAFE
         if ($cycleTimeSec <= 0) {
             return [
                 'target' => 0,
@@ -70,7 +71,6 @@ class KpiBubutService
 
         /**
          * Total waktu produksi (detik)
-         * source: work_hours (production_logs)
          */
         $productionSeconds = (int) round(
             $productions->sum('work_hours') * 3600
@@ -78,7 +78,6 @@ class KpiBubutService
 
         /**
          * Total downtime (detik)
-         * source: duration_minutes (downtime_logs)
          */
         $downtimeSeconds = (int) (
             $downtimes->sum('duration_minutes') * 60
@@ -92,14 +91,12 @@ class KpiBubutService
             $productionSeconds - $downtimeSeconds
         );
 
-        /**
-         * Cycle time dari master mirror
-         */
         $itemCode = $productions->first()->item_code;
         $cycleTimeSec = $this->getCycleTime($itemCode);
 
         $actualQty = (int) $productions->sum('actual_qty');
 
+        // 🔒 FAIL-SAFE
         if ($cycleTimeSec <= 0 || $effectiveSeconds === 0) {
             return [
                 'target' => 0,
@@ -123,12 +120,13 @@ class KpiBubutService
 
     /**
      * =====================================
-     * HELPER: AMBIL CYCLE TIME
+     * HELPER: AMBIL CYCLE TIME (ACTIVE ONLY)
      * =====================================
      */
     private function getCycleTime(string $itemCode): int
     {
         return (int) MdItemMirror::where('code', $itemCode)
+            ->where('status', 'active') // 🔒 HARD GUARD
             ->value('cycle_time_sec');
     }
 }

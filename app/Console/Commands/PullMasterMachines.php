@@ -9,7 +9,7 @@ use App\Models\MdMachineMirror;
 class PullMasterMachines extends Command
 {
     protected $signature = 'pull:master-machines';
-    protected $description = 'Pull master machine data from Master Data System';
+    protected $description = 'Pull ACTIVE machines from masterdata into KPI mirror';
 
     public function handle(): int
     {
@@ -27,31 +27,42 @@ class PullMasterMachines extends Command
             ])
             ->get();
 
+        $synced = 0;
+
         foreach ($masters as $m) {
-            // runtime_status dihitung di MASTER via accessor,
-            // jadi kita pull dari SELECT terpisah (computed via SQL view)
-            // atau (opsi praktis) hitung ulang dengan aturan yang sama:
+
+            // 🔒 DOUBLE GUARD — HARD STOP
+            if (($m->status ?? null) !== 'active') {
+                continue;
+            }
+
             $runtimeStatus = $this->computeRuntimeStatus($m->last_seen_at);
 
             MdMachineMirror::updateOrCreate(
                 ['code' => $m->code],
                 [
-                    'name' => $m->name,
-                    'department_code' => $m->department_code,
-                    'line_code' => $m->line_code,
-                    'status' => $m->status,
-                    'runtime_status' => $runtimeStatus,
-                    'last_seen_at' => $m->last_seen_at,
+                    'name'               => $m->name,
+                    'department_code'    => $m->department_code,
+                    'line_code'          => $m->line_code,
+                    'status'             => 'active', // force active
+                    'runtime_status'     => $runtimeStatus,
+                    'last_seen_at'       => $m->last_seen_at,
                     'last_active_module' => $m->last_active_module,
-                    'last_sync_at' => $m->last_sync_at,
+                    'last_sync_at'       => $m->last_sync_at,
                 ]
             );
+
+            $synced++;
         }
 
-        $this->info("Pulled {$masters->count()} machines.");
+        $this->info("Pulled {$synced} active machines.");
         return Command::SUCCESS;
     }
 
+    /**
+     * Compute runtime status based on last_seen_at.
+     * Runtime ≠ lifecycle
+     */
     private function computeRuntimeStatus(?string $lastSeenAt): string
     {
         if (!$lastSeenAt) {
@@ -60,8 +71,14 @@ class PullMasterMachines extends Command
 
         $diff = now()->diffInMinutes($lastSeenAt);
 
-        if ($diff <= 5) return 'ONLINE';
-        if ($diff <= 30) return 'STALE';
+        if ($diff <= 5) {
+            return 'ONLINE';
+        }
+
+        if ($diff <= 30) {
+            return 'STALE';
+        }
+
         return 'OFFLINE';
     }
 }
