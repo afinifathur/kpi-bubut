@@ -11,36 +11,51 @@ class PullMasterItems extends Command
     protected $signature = 'pull:master-items';
     protected $description = 'Pull active items from Master Data KPI';
 
-    public function handle()
+    public function handle(): int
     {
-        $items = DB::connection('master')
-            ->table('md_items')
-            ->where('status', 'active')
-            ->get();
+        $this->info('Pulling master items...');
 
         $count = 0;
 
-        foreach ($items as $item) {
-            $mirror = MdItemMirror::where('code', $item->code)->first();
+        DB::connection('master')
+            ->table('md_items')
+            ->where('status', 'active')
+            ->orderBy('code')
+            ->chunk(500, function ($items) use (&$count) {
 
-            if ($mirror && $mirror->source_updated_at === $item->updated_at) {
-                continue; // tidak berubah
-            }
+                foreach ($items as $item) {
 
-            MdItemMirror::updateOrCreate(
-                ['code' => $item->code],
-                [
-                    'name' => $item->name,
-                    'cycle_time_sec' => $item->cycle_time_sec,
-                    'status' => $item->status,
-                    'source_updated_at' => $item->updated_at,
-                    'last_sync_at' => now(),
-                ]
-            );
+                    $mirror = MdItemMirror::where('code', $item->code)->first();
 
-            $count++;
-        }
+                    if (
+                        $mirror &&
+                        $mirror->source_updated_at &&
+                        $mirror->source_updated_at->eq($item->updated_at)
+                    ) {
+                        continue; // tidak ada perubahan
+                    }
+
+                    MdItemMirror::updateOrCreate(
+                        ['code' => $item->code],
+                        [
+                            'name'               => $item->name,
+                            'department_code'    => $item->department_code, // ✅ WAJIB
+                            'cycle_time_sec'     => $item->cycle_time_sec,
+                            'status'             => $item->status,
+                            'aisi'               => $item->aisi,
+                            'standard'           => $item->standard,
+                            'unit_weight'        => $item->unit_weight,
+                            'source_updated_at'  => $item->updated_at,
+                            'last_sync_at'       => now(),
+                        ]
+                    );
+
+                    $count++;
+                }
+            });
 
         $this->info("Pulled {$count} items.");
+
+        return Command::SUCCESS;
     }
 }
