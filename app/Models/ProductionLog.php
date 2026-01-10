@@ -12,6 +12,7 @@ class ProductionLog extends Model
         'operator_code',
         'machine_code',
         'item_code',
+        'heat_number',
         'time_start',
         'time_end',
         'work_hours',

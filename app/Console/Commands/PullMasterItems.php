@@ -30,7 +30,7 @@ class PullMasterItems extends Command
                     if (
                         $mirror &&
                         $mirror->source_updated_at &&
-                        $mirror->source_updated_at->eq($item->updated_at)
+                        \Carbon\Carbon::parse($mirror->source_updated_at)->equalTo(\Carbon\Carbon::parse($item->updated_at))
                     ) {
                         continue; // tidak ada perubahan
                     }
@@ -38,15 +38,15 @@ class PullMasterItems extends Command
                     MdItemMirror::updateOrCreate(
                         ['code' => $item->code],
                         [
-                            'name'               => $item->name,
-                            'department_code'    => $item->department_code, // ✅ WAJIB
-                            'cycle_time_sec'     => $item->cycle_time_sec,
-                            'status'             => $item->status,
-                            'aisi'               => $item->aisi,
-                            'standard'           => $item->standard,
-                            'unit_weight'        => $item->unit_weight,
-                            'source_updated_at'  => $item->updated_at,
-                            'last_sync_at'       => now(),
+                            'name' => $item->name,
+                            'department_code' => $item->department_code, // ✅ WAJIB
+                            'cycle_time_sec' => $item->cycle_time_sec,
+                            'status' => $item->status,
+                            'aisi' => $item->aisi,
+                            'standard' => $item->standard,
+                            'unit_weight' => $item->unit_weight,
+                            'source_updated_at' => $item->updated_at,
+                            'last_sync_at' => now(),
                         ]
                     );
 

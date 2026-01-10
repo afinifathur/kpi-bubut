@@ -23,7 +23,7 @@ class PullMasterOperators extends Command
         foreach ($operators as $op) {
             $mirror = MdOperatorMirror::where('code', $op->code)->first();
 
-            if ($mirror && $mirror->source_updated_at === $op->updated_at) {
+            if ($mirror && $mirror->source_updated_at && \Carbon\Carbon::parse($mirror->source_updated_at)->equalTo(\Carbon\Carbon::parse($op->updated_at))) {
                 continue;
             }
 

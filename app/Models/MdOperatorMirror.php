@@ -21,4 +21,9 @@ class MdOperatorMirror extends Model
         'source_updated_at',
         'last_sync_at',
     ];
+
+    protected $casts = [
+        'source_updated_at' => 'datetime',
+        'last_sync_at' => 'datetime',
+    ];
 }

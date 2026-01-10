@@ -21,4 +21,10 @@ class MdMachineMirror extends Model
         'source_updated_at',
         'last_sync_at',
     ];
+
+    protected $casts = [
+        'last_seen_at' => 'datetime',
+        'last_sync_at' => 'datetime',
+        'source_updated_at' => 'datetime',
+    ];
 }

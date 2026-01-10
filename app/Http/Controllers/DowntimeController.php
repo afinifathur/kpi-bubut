@@ -24,10 +24,6 @@ class DowntimeController extends Controller
             'machines' => MdMachineMirror::where('status', 'active')
                 ->orderBy('code')
                 ->get(['code', 'name']),
-
-            'operators' => MdOperatorMirror::where('status', 'active')
-                ->orderBy('employment_seq')
-                ->get(['code', 'name']),
         ]);
     }
 
@@ -44,16 +40,16 @@ class DowntimeController extends Controller
          */
         $validated = $request->validate([
             'downtime_date' => 'required|date',
-            'shift'         => 'required|string|max:10',
+            'shift' => 'required|string|max:10',
 
-            'machine_code'  => 'required|string',
+            'machine_code' => 'required|string',
             'operator_code' => 'required|string',
 
-            'time_start'    => 'required|date_format:H:i',
-            'time_end'      => 'required|date_format:H:i|after:time_start',
+            'time_start' => 'required|date_format:H:i',
+            'time_end' => 'required|date_format:H:i|after:time_start',
 
-            'reason'        => 'required|string|max:255',
-            'note'          => 'nullable|string|max:255',
+            'reason' => 'required|string|max:255',
+            'note' => 'nullable|string|max:255',
         ]);
 
         /**
@@ -72,7 +68,7 @@ class DowntimeController extends Controller
          * 3. HITUNG DURASI DOWNTIME (MENIT)
          */
         $start = strtotime($validated['time_start']);
-        $end   = strtotime($validated['time_end']);
+        $end = strtotime($validated['time_end']);
 
         $durationMinutes = (int) round(($end - $start) / 60);
 
@@ -87,18 +83,18 @@ class DowntimeController extends Controller
          * NO FK — KPI IMMUTABLE
          */
         DowntimeLog::create([
-            'downtime_date'    => $validated['downtime_date'],
-            'shift'            => $validated['shift'],
+            'downtime_date' => $validated['downtime_date'],
+            'shift' => $validated['shift'],
 
-            'machine_code'     => $this->normalizeCode($machine->code),
-            'operator_code'    => $this->normalizeCode($operator->code),
+            'machine_code' => $this->normalizeCode($machine->code),
+            'operator_code' => $this->normalizeCode($operator->code),
 
-            'time_start'       => $validated['time_start'],
-            'time_end'         => $validated['time_end'],
+            'time_start' => $validated['time_start'],
+            'time_end' => $validated['time_end'],
             'duration_minutes' => $durationMinutes,
 
-            'reason'           => $validated['reason'],
-            'note'             => $validated['note'] ?? null,
+            'reason' => $validated['reason'],
+            'note' => $validated['note'] ?? null,
         ]);
 
         return redirect()

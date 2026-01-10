@@ -36,16 +36,8 @@ class RejectController extends Controller
     public function create()
     {
         return view('reject.input', [
-            'items' => MdItemMirror::where('status', 'active')
-                ->orderBy('code')
-                ->get(['code', 'name']),
-
             'machines' => MdMachineMirror::where('status', 'active')
                 ->orderBy('code')
-                ->get(['code', 'name']),
-
-            'operators' => MdOperatorMirror::where('status', 'active')
-                ->orderBy('employment_seq')
                 ->get(['code', 'name']),
         ]);
     }
@@ -62,13 +54,13 @@ class RejectController extends Controller
          * Server = Source of Truth
          */
         $validated = $request->validate([
-            'reject_date'   => 'required|date',
+            'reject_date' => 'required|date',
             'operator_code' => 'required|string',
-            'machine_code'  => 'required|string',
-            'item_code'     => 'required|string',
-            'reject_qty'    => 'required|integer|min:1',
+            'machine_code' => 'required|string',
+            'item_code' => 'required|string',
+            'reject_qty' => 'required|integer|min:1',
             'reject_reason' => 'required|string|max:255',
-            'note'          => 'nullable|string',
+            'note' => 'nullable|string',
         ]);
 
         /**
@@ -92,15 +84,15 @@ class RejectController extends Controller
          * NO FK — TIDAK MENGUBAH KPI PRODUKSI
          */
         RejectLog::create([
-            'reject_date'   => $validated['reject_date'],
+            'reject_date' => $validated['reject_date'],
 
             'operator_code' => $this->normalizeCode($operator->code),
-            'machine_code'  => $this->normalizeCode($machine->code),
-            'item_code'     => $this->normalizeCode($item->code),
+            'machine_code' => $this->normalizeCode($machine->code),
+            'item_code' => $this->normalizeCode($item->code),
 
-            'reject_qty'    => $validated['reject_qty'],
+            'reject_qty' => $validated['reject_qty'],
             'reject_reason' => $validated['reject_reason'],
-            'note'          => $validated['note'] ?? null,
+            'note' => $validated['note'] ?? null,
         ]);
 
         return redirect()

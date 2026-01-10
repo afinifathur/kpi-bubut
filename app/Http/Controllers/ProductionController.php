@@ -21,17 +21,10 @@ class ProductionController extends Controller
      */
     public function create()
     {
+        // Items and Operators are now loaded via Autocomplete API
         return view('production.input', [
-            'items' => MdItemMirror::where('status', 'active')
-                ->orderBy('code')
-                ->get(['code', 'name', 'cycle_time_sec']),
-
             'machines' => MdMachineMirror::where('status', 'active')
                 ->orderBy('code')
-                ->get(['code', 'name']),
-
-            'operators' => MdOperatorMirror::where('status', 'active')
-                ->orderBy('employment_seq')
                 ->get(['code', 'name']),
         ]);
     }
@@ -50,7 +43,7 @@ class ProductionController extends Controller
          * AKTIFKAN JIKA ADA ERROR FORM
          * Setelah ketemu masalah → HAPUS BARIS INI
          */
-         //dd($request->all());
+        //dd($request->all());
 
         /**
          * 1. VALIDASI INPUT DASAR
@@ -58,16 +51,17 @@ class ProductionController extends Controller
          */
         $validated = $request->validate([
             'production_date' => 'required|date',
-            'shift'           => 'required|string|max:10',
+            'shift' => 'required|string|max:10',
 
-            'operator_code'   => 'required|string',
-            'machine_code'    => 'required|string',
-            'item_code'       => 'required|string',
+            'operator_code' => 'required|string',
+            'machine_code' => 'required|string',
+            'item_code' => 'required|string',
+            'heat_number' => 'nullable|string',
 
-            'time_start'      => 'required|date_format:H:i',
-            'time_end'        => 'required|date_format:H:i|after:time_start',
+            'time_start' => 'required|date_format:H:i',
+            'time_end' => 'required|date_format:H:i|after:time_start',
 
-            'actual_qty'      => 'required|integer|min:0',
+            'actual_qty' => 'required|integer|min:0',
         ]);
 
         /**
@@ -130,21 +124,22 @@ class ProductionController extends Controller
          * NO FK — SNAPSHOT ONLY
          */
         ProductionLog::create([
-            'production_date'     => $validated['production_date'],
-            'shift'               => $validated['shift'],
+            'production_date' => $validated['production_date'],
+            'shift' => $validated['shift'],
 
-            'operator_code'       => $this->normalizeCode($operator->code),
-            'machine_code'        => $this->normalizeCode($machine->code),
-            'item_code'           => $this->normalizeCode($item->code),
+            'operator_code' => $this->normalizeCode($operator->code),
+            'machine_code' => $this->normalizeCode($machine->code),
+            'item_code' => $this->normalizeCode($item->code),
+            'heat_number' => $validated['heat_number'] ?? null,
 
-            'time_start'          => $validated['time_start'],
-            'time_end'            => $validated['time_end'],
-            'work_hours'          => $workHours,
+            'time_start' => $validated['time_start'],
+            'time_end' => $validated['time_end'],
+            'work_hours' => $workHours,
 
             // SNAPSHOT NILAI KRITIS
             'cycle_time_used_sec' => $cycleTimeSec,
-            'target_qty'          => $targetQty,
-            'actual_qty'          => $actualQty,
+            'target_qty' => $targetQty,
+            'actual_qty' => $actualQty,
             'achievement_percent' => $achievementPercent,
         ]);
 

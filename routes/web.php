@@ -16,7 +16,7 @@ use App\Http\Controllers\ExportController;
 | Redirect Default
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => redirect()->route('dashboard'));
+Route::get('/', fn() => redirect()->route('dashboard'));
 
 /*
 |--------------------------------------------------------------------------
@@ -31,10 +31,10 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 | Production
 |--------------------------------------------------------------------------
 */
-Route::prefix('produksi')->name('produksi.')->group(function () {
+Route::prefix('production')->name('production.')->group(function () {
 
-    Route::get('/input', [ProductionController::class, 'create'])
-        ->name('input');
+    Route::get('/create', [ProductionController::class, 'create'])
+        ->name('create');
 
     Route::post('/store', [ProductionController::class, 'store'])
         ->name('store');
@@ -50,8 +50,8 @@ Route::prefix('reject')->name('reject.')->group(function () {
     Route::get('/', [RejectController::class, 'index'])
         ->name('index');
 
-    Route::get('/input', [RejectController::class, 'create'])
-        ->name('input');
+    Route::get('/create', [RejectController::class, 'create'])
+        ->name('create');
 
     Route::post('/store', [RejectController::class, 'store'])
         ->name('store');
@@ -64,8 +64,8 @@ Route::prefix('reject')->name('reject.')->group(function () {
 */
 Route::prefix('downtime')->name('downtime.')->group(function () {
 
-    Route::get('/input', [DowntimeController::class, 'create'])
-        ->name('input');
+    Route::get('/create', [DowntimeController::class, 'create'])
+        ->name('create');
 
     Route::post('/store', [DowntimeController::class, 'store'])
         ->name('store');
@@ -124,4 +124,18 @@ Route::prefix('export')->name('export.')->group(function () {
 
     Route::get('/downtime/{date}', [ExportController::class, 'downtime'])
         ->name('downtime');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Internal API / Autocomplete
+|--------------------------------------------------------------------------
+*/
+Route::prefix('api')->name('api.')->group(function () {
+    Route::get('/search/items', [\App\Http\Controllers\AutocompleteController::class, 'searchItems'])->name('search.items');
+    Route::get('/search/operators', [\App\Http\Controllers\AutocompleteController::class, 'searchOperators'])->name('search.operators');
+    Route::get('/search/machines', [\App\Http\Controllers\AutocompleteController::class, 'searchMachines'])->name('search.machines');
+    Route::get('/search/heat-numbers', [\App\Http\Controllers\AutocompleteController::class, 'searchHeatNumbers'])->name('search.heat_numbers');
+
+    Route::post('/sync', [\App\Http\Controllers\ManualSyncController::class, 'sync'])->name('manual.sync');
 });
