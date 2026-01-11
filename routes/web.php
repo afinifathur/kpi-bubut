@@ -11,131 +11,144 @@ use App\Http\Controllers\TrackingMachineController;
 use App\Http\Controllers\TrackingDowntimeController;
 use App\Http\Controllers\ExportController;
 
-/*
-|--------------------------------------------------------------------------
-| Redirect Default
-|--------------------------------------------------------------------------
-*/
-Route::get('/', fn() => redirect()->route('dashboard'));
+use App\Http\Controllers\Auth\LoginController;
 
 /*
 |--------------------------------------------------------------------------
-| Dashboard
+| Authentication
 |--------------------------------------------------------------------------
 */
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->name('dashboard');
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-/*
-|--------------------------------------------------------------------------
-| Production
-|--------------------------------------------------------------------------
-*/
-Route::prefix('production')->name('production.')->group(function () {
+Route::middleware('auth')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Redirect Default
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/', fn() => redirect()->route('dashboard'));
 
-    Route::get('/create', [ProductionController::class, 'create'])
-        ->name('create');
+    /*
+    |--------------------------------------------------------------------------
+    | Dashboard
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
 
-    Route::post('/store', [ProductionController::class, 'store'])
-        ->name('store');
-});
+    /*
+    |--------------------------------------------------------------------------
+    | Production
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('production')->name('production.')->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| Reject
-|--------------------------------------------------------------------------
-*/
-Route::prefix('reject')->name('reject.')->group(function () {
+        Route::get('/create', [ProductionController::class, 'create'])
+            ->name('create');
 
-    Route::get('/', [RejectController::class, 'index'])
-        ->name('index');
-
-    Route::get('/create', [RejectController::class, 'create'])
-        ->name('create');
-
-    Route::post('/store', [RejectController::class, 'store'])
-        ->name('store');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Downtime
-|--------------------------------------------------------------------------
-*/
-Route::prefix('downtime')->name('downtime.')->group(function () {
-
-    Route::get('/create', [DowntimeController::class, 'create'])
-        ->name('create');
-
-    Route::post('/store', [DowntimeController::class, 'store'])
-        ->name('store');
-
-    Route::get('/', [TrackingDowntimeController::class, 'index'])
-        ->name('tracking');
-
-    Route::get('/tracking/pdf/{date}', [TrackingDowntimeController::class, 'exportPdf'])
-        ->name('tracking.pdf');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Tracking
-|--------------------------------------------------------------------------
-*/
-Route::prefix('tracking')->name('tracking.')->group(function () {
-
-    Route::prefix('operator')->name('operator.')->group(function () {
-
-        Route::get('/', [TrackingOperatorController::class, 'index'])
-            ->name('index');
-
-        Route::get('/pdf/{date}', [TrackingOperatorController::class, 'exportPdf'])
-            ->name('pdf');
-
-        Route::get('/{operator}/{date}', [TrackingOperatorController::class, 'show'])
-            ->name('show');
+        Route::post('/store', [ProductionController::class, 'store'])
+            ->name('store');
     });
 
-    Route::prefix('mesin')->name('mesin.')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Reject
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('reject')->name('reject.')->group(function () {
 
-        Route::get('/', [TrackingMachineController::class, 'index'])
+        Route::get('/', [RejectController::class, 'index'])
             ->name('index');
 
-        Route::get('/pdf/{date}', [TrackingMachineController::class, 'exportPdf'])
-            ->name('pdf');
+        Route::get('/create', [RejectController::class, 'create'])
+            ->name('create');
 
-        Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])
-            ->name('show');
+        Route::post('/store', [RejectController::class, 'store'])
+            ->name('store');
     });
-});
 
-/*
-|--------------------------------------------------------------------------
-| Export
-|--------------------------------------------------------------------------
-*/
-Route::prefix('export')->name('export.')->group(function () {
+    /*
+    |--------------------------------------------------------------------------
+    | Downtime
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('downtime')->name('downtime.')->group(function () {
 
-    Route::get('/operator/{date}', [ExportController::class, 'operatorKpi'])
-        ->name('operator');
+        Route::get('/create', [DowntimeController::class, 'create'])
+            ->name('create');
 
-    Route::get('/machine/{date}', [ExportController::class, 'machineKpi'])
-        ->name('machine');
+        Route::post('/store', [DowntimeController::class, 'store'])
+            ->name('store');
 
-    Route::get('/downtime/{date}', [ExportController::class, 'downtime'])
-        ->name('downtime');
-});
+        Route::get('/', [TrackingDowntimeController::class, 'index'])
+            ->name('tracking');
 
-/*
-|--------------------------------------------------------------------------
-| Internal API / Autocomplete
-|--------------------------------------------------------------------------
-*/
-Route::prefix('api')->name('api.')->group(function () {
-    Route::get('/search/items', [\App\Http\Controllers\AutocompleteController::class, 'searchItems'])->name('search.items');
-    Route::get('/search/operators', [\App\Http\Controllers\AutocompleteController::class, 'searchOperators'])->name('search.operators');
-    Route::get('/search/machines', [\App\Http\Controllers\AutocompleteController::class, 'searchMachines'])->name('search.machines');
-    Route::get('/search/heat-numbers', [\App\Http\Controllers\AutocompleteController::class, 'searchHeatNumbers'])->name('search.heat_numbers');
+        Route::get('/tracking/pdf/{date}', [TrackingDowntimeController::class, 'exportPdf'])
+            ->name('tracking.pdf');
+    });
 
-    Route::post('/sync', [\App\Http\Controllers\ManualSyncController::class, 'sync'])->name('manual.sync');
+    /*
+    |--------------------------------------------------------------------------
+    | Tracking
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('tracking')->name('tracking.')->group(function () {
+
+        Route::prefix('operator')->name('operator.')->group(function () {
+
+            Route::get('/', [TrackingOperatorController::class, 'index'])
+                ->name('index');
+
+            Route::get('/pdf/{date}', [TrackingOperatorController::class, 'exportPdf'])
+                ->name('pdf');
+
+            Route::get('/{operator}/{date}', [TrackingOperatorController::class, 'show'])
+                ->name('show');
+        });
+
+        Route::prefix('mesin')->name('mesin.')->group(function () {
+
+            Route::get('/', [TrackingMachineController::class, 'index'])
+                ->name('index');
+
+            Route::get('/pdf/{date}', [TrackingMachineController::class, 'exportPdf'])
+                ->name('pdf');
+
+            Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])
+                ->name('show');
+        });
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Export
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('export')->name('export.')->group(function () {
+
+        Route::get('/operator/{date}', [ExportController::class, 'operatorKpi'])
+            ->name('operator');
+
+        Route::get('/machine/{date}', [ExportController::class, 'machineKpi'])
+            ->name('machine');
+
+        Route::get('/downtime/{date}', [ExportController::class, 'downtime'])
+            ->name('downtime');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Internal API / Autocomplete
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('/search/items', [\App\Http\Controllers\AutocompleteController::class, 'searchItems'])->name('search.items');
+        Route::get('/search/operators', [\App\Http\Controllers\AutocompleteController::class, 'searchOperators'])->name('search.operators');
+        Route::get('/search/machines', [\App\Http\Controllers\AutocompleteController::class, 'searchMachines'])->name('search.machines');
+        Route::get('/search/heat-numbers', [\App\Http\Controllers\AutocompleteController::class, 'searchHeatNumbers'])->name('search.heat_numbers');
+
+        Route::post('/sync', [\App\Http\Controllers\ManualSyncController::class, 'sync'])->name('manual.sync');
+    });
 });

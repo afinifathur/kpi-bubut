@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasDepartmentScope;
+
 class MdOperatorMirror extends Model
 {
+    use HasDepartmentScope;
+
     protected $table = 'md_operators_mirror';
     protected $primaryKey = 'code';
     public $incrementing = false;

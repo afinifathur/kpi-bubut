@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasDepartmentScope;
+
 class MdMachineMirror extends Model
 {
+    use HasDepartmentScope;
+
     protected $table = 'md_machines_mirror';
     protected $primaryKey = 'code';
     public $incrementing = false;

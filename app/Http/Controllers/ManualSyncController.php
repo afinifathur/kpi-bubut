@@ -14,6 +14,17 @@ class ManualSyncController extends Controller
      */
     public function sync(Request $request)
     {
+        // Handle Department Context Switch for Manager/Director
+        if ($request->has('department_context')) {
+            $context = $request->get('department_context');
+            if ($context === 'ALL') {
+                session()->forget('selected_department_code');
+            } else {
+                session(['selected_department_code' => $context]);
+            }
+            return back()->with('info', 'Switched to department: ' . $context);
+        }
+
         $date = $request->get('date', now()->toDateString());
 
         try {

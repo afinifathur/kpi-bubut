@@ -4,9 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasDepartmentScope;
+
 class ProductionLog extends Model
 {
+    use HasDepartmentScope;
+
     protected $fillable = [
+        'department_code',
         'production_date',
         'shift',
         'operator_code',
