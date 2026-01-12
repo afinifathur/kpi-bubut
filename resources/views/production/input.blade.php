@@ -206,10 +206,10 @@
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Capaian</label>
                             <div class="w-full rounded-xl text-center font-bold text-lg p-3 border" :class="{
-                                                'bg-emerald-50 text-emerald-600 border-emerald-200': achievement >= 100,
-                                                'bg-amber-50 text-amber-600 border-amber-200': achievement >= 80 && achievement < 100,
-                                                'bg-red-50 text-red-600 border-red-200': achievement < 80
-                                            }">
+                                                    'bg-emerald-50 text-emerald-600 border-emerald-200': achievement >= 100,
+                                                    'bg-amber-50 text-amber-600 border-amber-200': achievement >= 80 && achievement < 100,
+                                                    'bg-red-50 text-red-600 border-red-200': achievement < 80
+                                                }">
                                 <span x-text="achievement + '%'">0%</span>
                             </div>
                         </div>
@@ -218,11 +218,21 @@
             </div>
 
             {{-- Submit Button --}}
-            <button type="submit"
-                class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-transform">
-                <span class="material-icons-round">save_alt</span>
-                Simpan Data Produksi
-            </button>
+            @if(auth()->user()->isReadOnly())
+                <div class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-2xl flex items-center gap-3">
+                    <span class="material-icons-round text-amber-500">lock</span>
+                    <div class="text-sm font-medium">
+                        Anda berada dalam mode **Read-Only** ({{ auth()->user()->role }}).
+                        Anda dapat melihat data tetapi tidak dapat melakukan penyimpanan atau perubahan.
+                    </div>
+                </div>
+            @else
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 hover:bg-blue-700 active:scale-95 transition-transform">
+                    <span class="material-icons-round">save_alt</span>
+                    Simpan Data Produksi
+                </button>
+            @endif
 
             {{-- Session Messages --}}
             @if(session('success'))

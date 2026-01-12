@@ -49,6 +49,9 @@ class RejectController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->user()->isReadOnly()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak akses (Read-Only).');
+        }
         /**
          * 1. VALIDASI INPUT DASAR
          * Server = Source of Truth

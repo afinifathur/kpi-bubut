@@ -36,6 +36,9 @@ class ProductionController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->user()->isReadOnly()) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak akses untuk menyimpan data (Read-Only).');
+        }
         /**
          * ===============================
          * DEBUG PALING CEPAT (SEMENTARA)

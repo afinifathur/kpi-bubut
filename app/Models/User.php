@@ -27,7 +27,9 @@ class User extends Authenticatable
         'role',
         'scope',
         'department_code',
+        'tim',
         'allowed_apps',
+        'additional_department_codes',
     ];
 
     /**
@@ -51,6 +53,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'allowed_apps' => 'array',
+            'additional_department_codes' => 'array',
         ];
+    }
+
+    public function isReadOnly(): bool
+    {
+        return in_array($this->role, ['auditor', 'hr_admin', 'hr_manager', 'guest']);
     }
 }

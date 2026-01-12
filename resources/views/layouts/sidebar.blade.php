@@ -31,20 +31,50 @@
         </div>
     </div>
 
-    @if(!Auth::user()->department_code && in_array(Auth::user()->role, ['manager', 'direktur', 'admin']))
+    @php
+        $currUser = Auth::user();
+        $isDirekturOrMR = in_array($currUser->role, ['direktur', 'mr']);
+        $isManager = $currUser->role === 'manager';
+        $additionalDepts = $currUser->additional_department_codes ?? [];
+        $hasAdditionalDepts = !empty($additionalDepts);
+    @endphp
+
+    @if($isDirekturOrMR || ($isManager && ($currUser->department_code || $hasAdditionalDepts)))
     <div class="px-4 py-4 border-b border-white/5 bg-black/10">
-        <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2">Department Context</label>
+        <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2">
+            {{ $isDirekturOrMR ? 'System Context' : 'Department Access' }}
+        </label>
         <form action="{{ route('api.manual.sync') }}" method="POST" id="contextForm">
             @csrf
             <select name="department_context" onchange="this.form.submit()" 
                 class="w-full bg-[#1e3a8a]/50 border-white/10 rounded-xl text-xs font-bold text-blue-100 focus:ring-blue-500/50 focus:border-blue-400 transition-all cursor-pointer py-2 px-3">
-                <option value="ALL" {{ !session('selected_department_code') ? 'selected' : '' }}>🌎 ALL BRANCHES</option>
-                {{-- Data departemen dari Master --}}
-                @foreach(\App\Models\MdDepartment::all() as $dept)
-                    <option value="{{ $dept->code }}" {{ session('selected_department_code') == $dept->code ? 'selected' : '' }}>
-                        🏗️ {{ $dept->name }}
-                    </option>
-                @endforeach
+                
+                @if($isDirekturOrMR)
+                    <option value="ALL" {{ !session('selected_department_code') ? 'selected' : '' }}>🌎 ALL DEPARTMENTS</option>
+                    @foreach(\App\Models\MdDepartment::where('status', 'active')->orderBy('code')->get() as $dept)
+                        <option value="{{ $dept->code }}" {{ session('selected_department_code') == $dept->code ? 'selected' : '' }}>
+                            🏢 {{ $dept->code }} - {{ $dept->name }}
+                        </option>
+                    @endforeach
+                @elseif($isManager)
+                    @php
+                        $allowedCodes = array_merge([$currUser->department_code], $additionalDepts);
+                        $allowedDepts = \App\Models\MdDepartment::whereIn('code', array_filter($allowedCodes))
+                            ->where('status', 'active')
+                            ->orderBy('code')
+                            ->get();
+                    @endphp
+                    
+                    @if(!session('selected_department_code') && $currUser->department_code)
+                        @php session(['selected_department_code' => $currUser->department_code]); @endphp
+                    @endif
+
+                    @foreach($allowedDepts as $dept)
+                        <option value="{{ $dept->code }}" {{ session('selected_department_code') == $dept->code ? 'selected' : '' }}>
+                            🏢 {{ $dept->code }} - {{ $dept->name }}
+                        </option>
+                    @endforeach
+                @endif
             </select>
         </form>
     </div>
