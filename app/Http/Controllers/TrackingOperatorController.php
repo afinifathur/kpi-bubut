@@ -22,11 +22,9 @@ class TrackingOperatorController extends Controller
          * Ambil tanggal dari request
          * fallback ke tanggal KPI terbaru
          */
-        $date = request('date') ?? DailyKpiOperator::max('kpi_date');
+        $latestDate = DailyKpiOperator::max('kpi_date');
+        $date = request('date') ?? $latestDate ?? date('Y-m-d');
 
-        if (!$date) {
-            return back()->with('error', 'Tanggal KPI tidak ditemukan.');
-        }
 
         /**
          * Data KPI operator untuk tanggal tersebut
@@ -42,9 +40,9 @@ class TrackingOperatorController extends Controller
         $operatorNames = MdOperatorMirror::pluck('name', 'code');
 
         return view('tracking.operator.index', [
-            'rows'          => $rows,
+            'rows' => $rows,
             'operatorNames' => $operatorNames,
-            'date'          => $date,
+            'date' => $date,
         ]);
     }
 
@@ -71,7 +69,7 @@ class TrackingOperatorController extends Controller
             ->get();
 
         return view('tracking.operator.show', [
-            'summary'    => $summary,
+            'summary' => $summary,
             'activities' => $activities,
         ]);
     }
@@ -89,11 +87,11 @@ class TrackingOperatorController extends Controller
         $operatorNames = MdOperatorMirror::pluck('name', 'code');
 
         $pdf = Pdf::loadView('tracking.operator.pdf', [
-            'rows'          => $rows,
+            'rows' => $rows,
             'operatorNames' => $operatorNames,
-            'date'          => $date,
+            'date' => $date,
         ]);
 
-        return $pdf->download('KPI-Operator-'.$date.'.pdf');
+        return $pdf->download('KPI-Operator-' . $date . '.pdf');
     }
 }

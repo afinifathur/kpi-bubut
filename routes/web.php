@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\RejectController;
@@ -150,5 +151,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/search/heat-numbers', [\App\Http\Controllers\AutocompleteController::class, 'searchHeatNumbers'])->name('search.heat_numbers');
 
         Route::post('/sync', [\App\Http\Controllers\ManualSyncController::class, 'sync'])->name('manual.sync');
+
+        // Context Switcher
+        Route::get('/context/departments', [\App\Http\Controllers\ContextSwitcherController::class, 'getDepartments'])->name('context.departments');
+        Route::post('/context/set', [\App\Http\Controllers\ContextSwitcherController::class, 'setDepartment'])->name('context.set');
     });
 });

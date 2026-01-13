@@ -16,12 +16,13 @@ class DailyKpiService
     {
         $rows = ProductionLog::where('production_date', $date)
             ->select(
+                'department_code',
                 'operator_code',
                 DB::raw('SUM(work_hours) as total_work_hours'),
                 DB::raw('SUM(target_qty) as total_target_qty'),
                 DB::raw('SUM(actual_qty) as total_actual_qty')
             )
-            ->groupBy('operator_code')
+            ->groupBy('department_code', 'operator_code')
             ->get();
 
         foreach ($rows as $row) {
@@ -32,14 +33,15 @@ class DailyKpiService
 
             DailyKpiOperator::updateOrCreate(
                 [
-                    'kpi_date'      => $date,
+                    'kpi_date' => $date,
+                    'department_code' => $row->department_code,
                     'operator_code' => $row->operator_code,
                 ],
                 [
-                    'total_work_hours'  => $row->total_work_hours,
-                    'total_target_qty'  => $row->total_target_qty,
-                    'total_actual_qty'  => $row->total_actual_qty,
-                    'kpi_percent'       => $kpiPercent,
+                    'total_work_hours' => $row->total_work_hours,
+                    'total_target_qty' => $row->total_target_qty,
+                    'total_actual_qty' => $row->total_actual_qty,
+                    'kpi_percent' => $kpiPercent,
                 ]
             );
         }
@@ -52,12 +54,13 @@ class DailyKpiService
     {
         $rows = ProductionLog::where('production_date', $date)
             ->select(
+                'department_code',
                 'machine_code',
                 DB::raw('SUM(work_hours) as total_work_hours'),
                 DB::raw('SUM(target_qty) as total_target_qty'),
                 DB::raw('SUM(actual_qty) as total_actual_qty')
             )
-            ->groupBy('machine_code')
+            ->groupBy('department_code', 'machine_code')
             ->get();
 
         foreach ($rows as $row) {
@@ -68,16 +71,18 @@ class DailyKpiService
 
             DailyKpiMachine::updateOrCreate(
                 [
-                    'kpi_date'    => $date,
-                    'machine_code'=> $row->machine_code,
+                    'kpi_date' => $date,
+                    'department_code' => $row->department_code,
+                    'machine_code' => $row->machine_code,
                 ],
                 [
-                    'total_work_hours'  => $row->total_work_hours,
-                    'total_target_qty'  => $row->total_target_qty,
-                    'total_actual_qty'  => $row->total_actual_qty,
-                    'kpi_percent'       => $kpiPercent,
+                    'total_work_hours' => $row->total_work_hours,
+                    'total_target_qty' => $row->total_target_qty,
+                    'total_actual_qty' => $row->total_actual_qty,
+                    'kpi_percent' => $kpiPercent,
                 ]
             );
         }
     }
 }
+

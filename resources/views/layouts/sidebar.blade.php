@@ -11,7 +11,8 @@
     <div class="px-6 py-5 border-b border-white/10 bg-black/10 shrink-0">
         <div class="flex items-center justify-between group">
             <div class="flex items-center gap-3 overflow-hidden">
-                <div class="shrink-0 w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-xs font-black text-blue-300 shadow-inner uppercase">
+                <div
+                    class="shrink-0 w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-xs font-black text-blue-300 shadow-inner uppercase">
                     {{ substr(Auth::user()->name, 0, 1) }}
                 </div>
                 <div class="truncate">
@@ -21,7 +22,9 @@
             </div>
             <form action="{{ route('logout') }}" method="POST" class="shrink-0 ml-2">
                 @csrf
-                <button type="submit" class="p-1.5 rounded-lg text-blue-400 hover:text-white hover:bg-red-500/20 transition-all" title="Sign Out">
+                <button type="submit"
+                    class="p-1.5 rounded-lg text-blue-400 hover:text-white hover:bg-red-500/20 transition-all"
+                    title="Sign Out">
                     <span class="material-icons-round text-lg leading-none">logout</span>
                 </button>
             </form>
@@ -40,18 +43,16 @@
     @endphp
 
     @if($isDirekturOrMR || ($isManager && ($currUser->department_code || $hasAdditionalDepts)))
-    <div class="px-4 py-4 border-b border-white/5 bg-black/10">
-        <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2">
-            {{ $isDirekturOrMR ? 'System Context' : 'Department Access' }}
-        </label>
-        <form action="{{ route('api.manual.sync') }}" method="POST" id="contextForm">
-            @csrf
-            <select name="department_context" onchange="this.form.submit()" 
+        <div class="px-4 py-4 border-b border-white/5 bg-black/10">
+            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2 px-2">
+                {{ $isDirekturOrMR ? 'System Context' : 'Department Access' }}
+            </label>
+            <select id="contextSwitcher"
                 class="w-full bg-[#1e3a8a]/50 border-white/10 rounded-xl text-xs font-bold text-blue-100 focus:ring-blue-500/50 focus:border-blue-400 transition-all cursor-pointer py-2 px-3">
-                
+
                 @if($isDirekturOrMR)
-                    <option value="ALL" {{ !session('selected_department_code') ? 'selected' : '' }}>🌎 ALL DEPARTMENTS</option>
-                    @foreach(\App\Models\MdDepartment::where('status', 'active')->orderBy('code')->get() as $dept)
+                    <option value="all" {{ !session('selected_department_code') ? 'selected' : '' }}>🌎 ALL DEPARTMENTS</option>
+                    @foreach(\Illuminate\Support\Facades\DB::connection('master')->table('md_departments')->where('code', 'LIKE', '404%')->where('status', 'active')->orderBy('code')->get() as $dept)
                         <option value="{{ $dept->code }}" {{ session('selected_department_code') == $dept->code ? 'selected' : '' }}>
                             🏢 {{ $dept->code }} - {{ $dept->name }}
                         </option>
@@ -59,16 +60,20 @@
                 @elseif($isManager)
                     @php
                         $allowedCodes = array_merge([$currUser->department_code], $additionalDepts);
-                        $allowedDepts = \App\Models\MdDepartment::whereIn('code', array_filter($allowedCodes))
+                        $allowedDepts = \Illuminate\Support\Facades\DB::connection('master')
+                            ->table('md_departments')
+                            ->where(function ($q) use ($allowedCodes) {
+                                foreach (array_filter($allowedCodes) as $code) {
+                                    $q->orWhere('code', 'LIKE', $code . '%');
+                                }
+                            })
                             ->where('status', 'active')
                             ->orderBy('code')
                             ->get();
                     @endphp
-                    
-                    @if(!session('selected_department_code') && $currUser->department_code)
-                        @php session(['selected_department_code' => $currUser->department_code]); @endphp
-                    @endif
 
+                    <option value="all" {{ !session('selected_department_code') ? 'selected' : '' }}>🌎 ALL MY DEPARTMENTS
+                    </option>
                     @foreach($allowedDepts as $dept)
                         <option value="{{ $dept->code }}" {{ session('selected_department_code') == $dept->code ? 'selected' : '' }}>
                             🏢 {{ $dept->code }} - {{ $dept->name }}
@@ -76,8 +81,27 @@
                     @endforeach
                 @endif
             </select>
-        </form>
-    </div>
+        </div>
+        <script>
+            document.getElementById('contextSwitcher').addEventListener('change', async function () {
+                const code = this.value;
+                try {
+                    const res = await fetch('{{ route("api.context.set") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({ department_code: code })
+                    });
+                    if (res.ok) {
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    console.error('Context switch failed', e);
+                }
+            });
+        </script>
     @endif
 
     <nav class="flex-1 py-6 px-3 space-y-1 text-sm">

@@ -22,9 +22,13 @@ class MdMachineMirror extends Model
         'department_code',
         'line_code',
         'status',
+        'runtime_status',
+        'last_seen_at',
+        'last_active_module',
         'source_updated_at',
         'last_sync_at',
     ];
+
 
     protected $casts = [
         'last_seen_at' => 'datetime',
