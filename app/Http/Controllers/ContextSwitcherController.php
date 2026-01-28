@@ -15,8 +15,10 @@ class ContextSwitcherController extends Controller
         $user = Auth::user();
         $departments = [];
 
-        // Direktur & MR: Can see all bubut departments
-        if (in_array($user->role, ['direktur', 'mr'])) {
+        // Direktur, MR, HR, Guest (and Special HR Emails): Can see all bubut departments
+        $isSpecialHr = in_array($user->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com']);
+
+        if (in_array($user->role, ['direktur', 'mr', 'hr_admin', 'hr_manager', 'guest']) || $isSpecialHr) {
             $departments = \Illuminate\Support\Facades\DB::connection('master')
                 ->table('md_departments')
                 ->where('code', 'LIKE', '404%')
@@ -60,7 +62,9 @@ class ContextSwitcherController extends Controller
         $code = $request->input('department_code');
 
         // Validate user can access this department
-        if (!in_array($user->role, ['direktur', 'mr', 'manager'])) {
+        $isSpecialHr = in_array($user->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com']);
+
+        if (!in_array($user->role, ['direktur', 'mr', 'manager', 'hr_admin', 'hr_manager', 'guest']) && !$isSpecialHr) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

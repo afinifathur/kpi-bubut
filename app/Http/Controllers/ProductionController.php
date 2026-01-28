@@ -62,7 +62,7 @@ class ProductionController extends Controller
             'heat_number' => 'nullable|string',
 
             'time_start' => 'required|date_format:H:i',
-            'time_end' => 'required|date_format:H:i|after:time_start',
+            'time_end' => 'required|date_format:H:i', // Removed after:time_start to allow next day
 
             'cycle_time_minutes' => 'required|integer|min:0',
             'cycle_time_seconds' => 'required|integer|min:0|max:59',
@@ -89,9 +89,16 @@ class ProductionController extends Controller
 
         /**
          * 3. HITUNG DURASI KERJA
+         * Handle Cross-Day Shift (Misal Shift 3: 23:00 - 07:00)
          */
-        $workSeconds = strtotime($validated['time_end'])
-            - strtotime($validated['time_start']);
+        $startSeconds = strtotime($validated['time_start']);
+        $endSeconds = strtotime($validated['time_end']);
+
+        if ($endSeconds < $startSeconds) {
+            $endSeconds += 86400; // Add 24 hours (1 day)
+        }
+
+        $workSeconds = $endSeconds - $startSeconds;
 
         if ($workSeconds <= 0) {
             throw ValidationException::withMessages([

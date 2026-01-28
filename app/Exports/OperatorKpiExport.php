@@ -25,7 +25,7 @@ class OperatorKpiExport implements FromCollection, WithHeadings
             ->map(function ($row) {
                 // Determine operator name
                 $opName = \App\Models\MdOperatorMirror::where('code', $row->operator_code)->value('name') ?? $row->operator_code;
-                
+
                 // Determine Item Name + Size
                 $itemName = $row->item->name ?? $row->item_code;
                 if (!empty($row->size)) {
@@ -37,6 +37,8 @@ class OperatorKpiExport implements FromCollection, WithHeadings
                     'operator' => $opName,
                     'machine' => $row->machine_code, // Keep code as requested for machine
                     'item' => $itemName,
+                    'time_start' => $row->time_start,
+                    'time_end' => $row->time_end,
                     'target' => $row->target_qty,
                     'actual' => $row->actual_qty,
                     'kpi' => $row->achievement_percent . '%',
@@ -51,6 +53,8 @@ class OperatorKpiExport implements FromCollection, WithHeadings
             'Operator',
             'Mesin',
             'Item & Size',
+            'Waktu Mulai',
+            'Waktu Selesai',
             'Target',
             'Aktual',
             'KPI',

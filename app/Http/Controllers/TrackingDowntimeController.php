@@ -18,22 +18,36 @@ class TrackingDowntimeController extends Controller
      */
     public function index()
     {
-        /**
-         * Ambil tanggal dari request
-         * fallback ke tanggal downtime terbaru
-         */
-        $date = request('date') ?? DowntimeLog::max('downtime_date');
+        $startDate = request('start_date', date('Y-m-d'));
+        $endDate = request('end_date', date('Y-m-d'));
+        $machineCode = request('machine_code');
 
-        if (!$date) {
-            return back()->with('error', 'Tanggal downtime tidak ditemukan.');
+        // Validation 1: Max 45 Hari
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        if ($start->diffInDays($end) > 45) {
+            return redirect()->route('downtime.tracking', ['date' => $startDate])
+                ->with('error', 'Rentang tanggal maksimal 45 hari. Silakan perkecil rentang.');
+        }
+
+        // Validation 2: Machine Mandatory if > 1 day
+        if ($start->diffInDays($end) > 0 && (!$machineCode || $machineCode === 'all')) {
+            return redirect()->route('downtime.tracking', ['date' => $endDate])
+                ->with('error', 'Untuk rentang tanggal > 1 hari, WAJIB memilih satu mesin spesifik.');
         }
 
         /**
          * LIST DOWNTIME (DETAIL EVENT)
          * FACT TABLE — READ ONLY
          */
-        $list = DowntimeLog::with(['machine', 'operator'])
-            ->where('downtime_date', $date)
+        $queryList = DowntimeLog::with(['machine', 'operator'])
+            ->whereBetween('downtime_date', [$startDate, $endDate]);
+
+        if ($machineCode && $machineCode !== 'all') {
+            $queryList->where('machine_code', $machineCode);
+        }
+
+        $list = $queryList->orderBy('downtime_date', 'desc')
             ->orderBy('machine_code')
             ->orderByDesc('duration_minutes')
             ->get();
@@ -42,11 +56,16 @@ class TrackingDowntimeController extends Controller
          * SUMMARY DOWNTIME PER MESIN (TOTAL MENIT)
          * AGGREGATE FACT
          */
-        $summary = DowntimeLog::where('downtime_date', $date)
-            ->select(
-                'machine_code',
-                DB::raw('SUM(duration_minutes) as total_minutes')
-            )
+        $querySummary = DowntimeLog::whereBetween('downtime_date', [$startDate, $endDate]);
+
+        if ($machineCode && $machineCode !== 'all') {
+            $querySummary->where('machine_code', $machineCode);
+        }
+
+        $summary = $querySummary->select(
+            'machine_code',
+            DB::raw('SUM(duration_minutes) as total_minutes')
+        )
             ->groupBy('machine_code')
             ->orderBy('machine_code')
             ->get();
@@ -58,10 +77,13 @@ class TrackingDowntimeController extends Controller
         $machineNames = MdMachineMirror::pluck('name', 'code');
 
         return view('downtime.index', [
-            'list'         => $list,
-            'summary'      => $summary,
+            'list' => $list,
+            'summary' => $summary,
             'machineNames' => $machineNames,
-            'date'         => $date,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'selectedMachine' => $machineCode,
+            'date' => $endDate, // fallback compatibility
         ]);
     }
     /**
@@ -69,34 +91,63 @@ class TrackingDowntimeController extends Controller
      * EXPORT PDF
      * ===============================
      */
-    public function exportPdf(string $date)
+    public function exportPdf()
     {
-        $list = DowntimeLog::with(['machine', 'operator'])
-            ->where('downtime_date', $date)
+        $startDate = request('start_date', date('Y-m-d'));
+        $endDate = request('end_date', date('Y-m-d'));
+        $machineCode = request('machine_code');
+
+        // Validation
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+
+        if ($start->diffInDays($end) > 45) {
+            return back()->with('error', 'Rentang tanggal maksimal 45 hari.');
+        }
+        if ($start->diffInDays($end) > 0 && (!$machineCode || $machineCode === 'all')) {
+            return back()->with('error', 'Wajib pilih mesin untuk rentang > 1 hari.');
+        }
+
+        // QUERY LIST
+        $queryList = DowntimeLog::with(['machine', 'operator'])
+            ->whereBetween('downtime_date', [$startDate, $endDate]);
+
+        if ($machineCode && $machineCode !== 'all') {
+            $queryList->where('machine_code', $machineCode);
+        }
+
+        $list = $queryList->orderBy('downtime_date')
             ->orderBy('machine_code')
             ->orderByDesc('duration_minutes')
             ->get();
 
-        $summary = DowntimeLog::where('downtime_date', $date)
-            ->select(
-                'machine_code',
-                DB::raw('SUM(duration_minutes) as total_minutes')
-            )
+        // QUERY SUMMARY
+        $querySummary = DowntimeLog::whereBetween('downtime_date', [$startDate, $endDate]);
+
+        if ($machineCode && $machineCode !== 'all') {
+            $querySummary->where('machine_code', $machineCode);
+        }
+
+        $summary = $querySummary->select(
+            'machine_code',
+            DB::raw('SUM(duration_minutes) as total_minutes')
+        )
             ->groupBy('machine_code')
             ->orderBy('machine_code')
             ->get();
 
         $machineNames = MdMachineMirror::pluck('name', 'code');
+        $dateLabel = ($startDate === $endDate) ? $startDate : "$startDate - $endDate";
 
         $pdf = Pdf::loadView('downtime.pdf', [
-            'list'         => $list,
-            'summary'      => $summary,
+            'list' => $list,
+            'summary' => $summary,
             'machineNames' => $machineNames,
-            'date'         => $date,
+            'date' => $dateLabel,
         ]);
 
         $pdf->setPaper('A4', 'landscape');
 
-        return $pdf->download('Laporan-Downtime-'.$date.'.pdf');
+        return $pdf->stream('Laporan-Downtime-' . $dateLabel . '.pdf');
     }
 }

@@ -36,10 +36,12 @@
 
     @php
         $currUser = Auth::user();
-        $isDirekturOrMR = in_array($currUser->role, ['direktur', 'mr']);
+        $isSpecialHr = in_array($currUser->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com']);
+        $isDirekturOrMR = in_array($currUser->role, ['direktur', 'mr', 'hr_admin', 'hr_manager', 'guest']) || $isSpecialHr;
         $isManager = $currUser->role === 'manager';
         $additionalDepts = $currUser->additional_department_codes ?? [];
         $hasAdditionalDepts = !empty($additionalDepts);
+        $isReadOnly = $currUser->isReadOnly();
     @endphp
 
     @if($isDirekturOrMR || ($isManager && ($currUser->department_code || $hasAdditionalDepts)))
@@ -114,25 +116,27 @@
             <span class="font-medium">Dashboard</span>
         </a>
 
-        <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Produksi</div>
+        @if(!$isReadOnly)
+            <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Produksi</div>
 
-        <a href="{{ route('production.create') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('production.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">add_circle_outline</span>
-            <span class="font-medium">Input Produksi</span>
-        </a>
+            <a href="{{ route('production.create') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('production.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <span class="material-icons-round text-xl">add_circle_outline</span>
+                <span class="font-medium">Input Produksi</span>
+            </a>
 
-        <a href="{{ route('reject.create') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('reject.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">error_outline</span>
-            <span class="font-medium">Input Reject</span>
-        </a>
+            <a href="{{ route('reject.create') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('reject.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <span class="material-icons-round text-xl">error_outline</span>
+                <span class="font-medium">Input Reject</span>
+            </a>
 
-        <a href="{{ route('downtime.create') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('downtime.create') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">timer_off</span>
-            <span class="font-medium">Input Downtime</span>
-        </a>
+            <a href="{{ route('downtime.create') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('downtime.create') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <span class="material-icons-round text-xl">timer_off</span>
+                <span class="font-medium">Input Downtime</span>
+            </a>
+        @endif
 
         <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Laporan</div>
 
@@ -161,6 +165,22 @@
             <span class="material-icons-round text-xl">assignment_ind</span>
             <span class="font-medium">Operator</span>
         </a>
+
+        <a href="{{ route('daily_report.downtime.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('daily_report.downtime.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+            <span class="material-icons-round text-xl">timer_off</span>
+            <span class="font-medium">Downtime</span>
+        </a>
+
+        @if(in_array(Auth::user()->role, ['direktur', 'mr']))
+            <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">System</div>
+
+            <a href="{{ route('audit_logs.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('audit_logs.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <span class="material-icons-round text-xl">security</span>
+                <span class="font-medium">Audit Logs</span>
+            </a>
+        @endif
 
     </nav>
 

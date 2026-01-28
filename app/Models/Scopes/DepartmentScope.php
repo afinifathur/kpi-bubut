@@ -17,8 +17,10 @@ class DepartmentScope implements Scope
         if (Auth::check()) {
             $user = Auth::user();
 
-            // 1. Direktur & MR: Full access by default, or session context
-            if (in_array($user->role, ['direktur', 'mr'])) {
+            // 1. Direktur, MR, HR, Guest (and Special HR Emails): Full access by default, or session context
+            $isSpecialHr = in_array($user->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com']);
+
+            if (in_array($user->role, ['direktur', 'mr', 'hr_admin', 'hr_manager', 'guest']) || $isSpecialHr) {
                 if (session()->has('selected_department_code')) {
                     $selected = session('selected_department_code');
                     if ($selected !== 'all') {

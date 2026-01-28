@@ -8,7 +8,7 @@ use App\Traits\HasDepartmentScope;
 
 class RejectLog extends Model
 {
-    use HasDepartmentScope;
+    use HasDepartmentScope, \App\Traits\LoggableTrait;
 
     protected $fillable = [
         'department_code',

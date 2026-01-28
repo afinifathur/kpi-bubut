@@ -20,7 +20,35 @@
         </div>
 
         <div class="flex gap-2">
-            <a href="{{ route('daily_report.operator.pdf', $date) }}"
+            {{-- EXCEL --}}
+            <a href="{{ route('export.operator', $date) }}"
+                class="inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                    </path>
+                </svg>
+                Export Excel
+            </a>
+
+            {{-- REFRESH --}}
+            <form action="{{ route('api.manual.sync') }}" method="POST" class="inline-block">
+                @csrf
+                <input type="hidden" name="date" value="{{ $date }}">
+                <button type="submit"
+                    class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                        </path>
+                    </svg>
+                    Refresh Data
+                </button>
+            </form>
+
+            <a href="{{ route('daily_report.operator.pdf', $date) }}" target="_blank"
                 class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg">
@@ -87,7 +115,8 @@
                                 {{ number_format($row->work_hours, 2) }}
                                 <div class="text-[10px] text-gray-400">
                                     {{ \Carbon\Carbon::parse($row->time_start)->format('H:i') }} -
-                                    {{ \Carbon\Carbon::parse($row->time_end)->format('H:i') }}</div>
+                                    {{ \Carbon\Carbon::parse($row->time_end)->format('H:i') }}
+                                </div>
                             </td>
                             <td class="px-4 py-4 text-right text-gray-600">
                                 {{ $row->target_qty }}
@@ -109,20 +138,22 @@
                                 </span>
                             </td>
                             <td class="px-4 py-4 text-center">
-                                <form action="{{ route('daily_report.operator.destroy', $row->id) }}" method="POST"
-                                    class="inline-block delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button"
-                                        class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors btn-delete"
-                                        title="Hapus Data">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                </form>
+                                @if(!$isLocked && !auth()->user()->isReadOnly())
+                                    <form action="{{ route('daily_report.operator.destroy', $row->id) }}" method="POST"
+                                        class="inline-block delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                            class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors btn-delete"
+                                            title="Hapus Data">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty

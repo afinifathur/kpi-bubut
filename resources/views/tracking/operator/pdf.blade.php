@@ -98,7 +98,7 @@
 
     <div class="header">
         <h2>Laporan KPI Harian Operator</h2>
-        <p>Tanggal: {{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
+        <p>Tanggal: {{ $date }}</p>
     </div>
 
     <table>

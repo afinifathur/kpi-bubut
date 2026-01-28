@@ -59,6 +59,9 @@ class User extends Authenticatable
 
     public function isReadOnly(): bool
     {
+        if (in_array($this->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com'])) {
+            return true;
+        }
         return in_array($this->role, ['auditor', 'hr_admin', 'hr_manager', 'guest']);
     }
 }

@@ -86,7 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [TrackingDowntimeController::class, 'index'])
             ->name('tracking');
 
-        Route::get('/tracking/pdf/{date}', [TrackingDowntimeController::class, 'exportPdf'])
+        Route::get('/tracking/pdf', [TrackingDowntimeController::class, 'exportPdf'])
             ->name('tracking.pdf');
     });
 
@@ -102,7 +102,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [TrackingOperatorController::class, 'index'])
                 ->name('index');
 
-            Route::get('/pdf/{date}', [TrackingOperatorController::class, 'exportPdf'])
+            Route::get('/pdf', [TrackingOperatorController::class, 'exportPdf'])
                 ->name('pdf');
 
             Route::get('/{operator}/{date}', [TrackingOperatorController::class, 'show'])
@@ -114,7 +114,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [TrackingMachineController::class, 'index'])
                 ->name('index');
 
-            Route::get('/pdf/{date}', [TrackingMachineController::class, 'exportPdf'])
+            Route::get('/pdf', [TrackingMachineController::class, 'exportPdf'])
                 ->name('pdf');
 
             Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])
@@ -134,6 +134,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/show/{date}', [\App\Http\Controllers\DailyReportController::class, 'operatorShow'])->name('show');
             Route::delete('/destroy/{id}', [\App\Http\Controllers\DailyReportController::class, 'operatorDestroy'])->name('destroy');
             Route::get('/pdf/{date}', [\App\Http\Controllers\DailyReportController::class, 'operatorExportPdf'])->name('pdf');
+            // Locking
+            Route::post('/toggle-lock', [\App\Http\Controllers\DailyReportController::class, 'toggleLock'])->name('toggle_lock');
+        });
+
+        Route::prefix('downtime')->name('downtime.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DailyReportController::class, 'downtimeIndex'])->name('index');
+            Route::get('/show/{date}', [\App\Http\Controllers\DailyReportController::class, 'downtimeShow'])->name('show');
+            Route::delete('/destroy/{id}', [\App\Http\Controllers\DailyReportController::class, 'downtimeDestroy'])->name('destroy');
+            Route::get('/pdf/{date}', [\App\Http\Controllers\DailyReportController::class, 'downtimeExportPdf'])->name('pdf');
+            // Re-use lock toggle as it is date-based
+            Route::post('/toggle-lock', [\App\Http\Controllers\DailyReportController::class, 'toggleLock'])->name('toggle_lock');
         });
 
     });
@@ -154,6 +165,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/downtime/{date}', [ExportController::class, 'downtime'])
             ->name('downtime');
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Logs (MR & Direktur Only)
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])
+        ->name('audit_logs.index');
 
     /*
     |--------------------------------------------------------------------------

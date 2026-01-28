@@ -8,7 +8,7 @@ use App\Traits\HasDepartmentScope;
 
 class DowntimeLog extends Model
 {
-    use HasDepartmentScope;
+    use HasDepartmentScope, \App\Traits\LoggableTrait;
 
     protected $table = 'downtime_logs';
 
