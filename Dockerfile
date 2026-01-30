@@ -1,3 +1,13 @@
+# Stage 1: Build Frontend Assets
+FROM node:18 as frontend
+WORKDIR /app
+COPY package.json package-lock.json vite.config.js ./
+RUN npm install
+COPY resources ./resources
+COPY public ./public
+RUN npm run build
+
+# Stage 2: Serve Application
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -31,13 +41,16 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
-# Copy application code
+# Copy application code from repo
 COPY . /var/www/html
+
+# Copy built assets from frontend stage
+COPY --from=frontend /app/public/build /var/www/html/public/build
 
 # Fix git dubious ownership
 RUN git config --global --add safe.directory /var/www/html
 
-# Install dependencies
+# Install dependencies (PHP)
 RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
 
 # Set permissions
