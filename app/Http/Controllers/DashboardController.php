@@ -13,21 +13,21 @@ class DashboardController extends Controller
         | DATE & SCOPE
         |--------------------------------------------------------------------------
         */
-        // Use latest KPI date or yesterday as fallback
-        $date = \App\Models\DailyKpiOperator::max('kpi_date')
+        // Use latest Production Log date or yesterday as fallback
+        $date = \App\Models\ProductionLog::max('production_date')
             ?? \Carbon\Carbon::yesterday()->format('Y-m-d');
 
         $prevDate = \Carbon\Carbon::parse($date)->subDay()->format('Y-m-d');
 
         /*
         |--------------------------------------------------------------------------
-        | 1. CARD STATS (Daily Aggregate)
+        | 1. CARD STATS (Daily Aggregate - from Raw Logs for accuracy)
         |--------------------------------------------------------------------------
         */
-        $dailyStats = \App\Models\DailyKpiOperator::where('kpi_date', $date)
+        $dailyStats = \App\Models\ProductionLog::where('production_date', $date)
             ->selectRaw('
-                COALESCE(SUM(total_target_qty), 0) as total_target,
-                COALESCE(SUM(total_actual_qty), 0) as total_actual
+                COALESCE(SUM(target_qty), 0) as total_target,
+                COALESCE(SUM(actual_qty), 0) as total_actual
             ')
             ->first();
 
@@ -36,9 +36,14 @@ class DashboardController extends Controller
             ? ($dailyStats->total_actual / $dailyStats->total_target) * 100
             : 0;
 
-        // Overall KPI (Average of all operators)
-        $overallKpi = \App\Models\DailyKpiOperator::where('kpi_date', $date)
-            ->avg('kpi_percent') ?? 0;
+        // Overall KPI (Average of all operators - from Raw Logs)
+        // Logic: (Sum Actual / Sum Target) per operator, then average
+        $operatorKpis = \App\Models\ProductionLog::where('production_date', $date)
+            ->selectRaw('operator_code, (SUM(actual_qty) / NULLIF(SUM(target_qty), 0)) * 100 as kpi')
+            ->groupBy('operator_code')
+            ->get();
+
+        $overallKpi = $operatorKpis->avg('kpi') ?? 0;
 
         /*
         |--------------------------------------------------------------------------
@@ -46,20 +51,25 @@ class DashboardController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        // A. Weekly Production (Last 7 Days)
-        $startDate = \Carbon\Carbon::parse($date)->subDays(6)->format('Y-m-d');
+        // A. Last 7 Active Production Days (Skip empty dates)
+        $activeDates = \App\Models\ProductionLog::select('production_date')
+            ->distinct()
+            ->orderByDesc('production_date')
+            ->limit(7)
+            ->pluck('production_date')
+            ->sort()
+            ->values()
+            ->toArray();
 
-        $weeklyProduction = \App\Models\DailyKpiOperator::selectRaw('kpi_date, SUM(total_actual_qty) as total_actual, SUM(total_target_qty) as total_target')
-            ->where('kpi_date', '>=', $startDate)
-            ->where('kpi_date', '<=', $date)
-            ->groupBy('kpi_date')
-            ->orderBy('kpi_date')
+        $weeklyProduction = \App\Models\ProductionLog::selectRaw('production_date as kpi_date, SUM(actual_qty) as total_actual, SUM(target_qty) as total_target')
+            ->whereIn('production_date', $activeDates)
+            ->groupBy('production_date')
+            ->orderBy('production_date')
             ->get();
 
-        // B. Production by Line (Last 7 Days) - DYNAMIC LINES
+        // B. Production by Line (Last 7 Active Days) - DYNAMIC LINES
         $productionByLine = \App\Models\ProductionLog::selectRaw('production_date, line, SUM(actual_qty) as total_qty')
-            ->where('production_date', '>=', $startDate)
-            ->where('production_date', '<=', $date)
+            ->whereIn('production_date', $activeDates)
             ->whereNotNull('line')
             ->groupBy('production_date', 'line')
             ->orderBy('production_date')
@@ -101,9 +111,9 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // D. Top 3 Operators (Monthly Average)
-        $topOperators = \App\Models\DailyKpiOperator::selectRaw('operator_code, AVG(kpi_percent) as kpi_percent')
-            ->whereBetween('kpi_date', [$monthStart, $monthEnd]) // Current Month Scope
+        // D. Top 3 Operators (Monthly Average - from Raw Logs)
+        $topOperators = \App\Models\ProductionLog::selectRaw('operator_code, (SUM(actual_qty) / NULLIF(SUM(target_qty), 0)) * 100 as kpi_percent')
+            ->whereBetween('production_date', [$monthStart, $monthEnd])
             ->groupBy('operator_code')
             ->orderByDesc('kpi_percent')
             ->limit(3)
@@ -114,12 +124,12 @@ class DashboardController extends Controller
         // Merge with Low performing codes later or query separate?
         // Query separate to ensure we have names for both lists
 
-        // E. Low Performing Operators (Monthly Average < 90%)
-        $lowOperators = \App\Models\DailyKpiOperator::selectRaw('operator_code, AVG(kpi_percent) as kpi_percent')
-            ->whereBetween('kpi_date', [$monthStart, $monthEnd])
+        // E. Low Performing Operators (Monthly Average < 90% - from Raw Logs)
+        $lowOperators = \App\Models\ProductionLog::selectRaw('operator_code, (SUM(actual_qty) / NULLIF(SUM(target_qty), 0)) * 100 as kpi_percent')
+            ->whereBetween('production_date', [$monthStart, $monthEnd])
             ->groupBy('operator_code')
             ->having('kpi_percent', '<', 90)
-            ->orderBy('kpi_percent') // Lowest first
+            ->orderBy('kpi_percent')
             ->limit(3)
             ->get();
 

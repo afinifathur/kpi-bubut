@@ -26,6 +26,8 @@ class ManualSyncController extends Controller
         }
 
         $date = $request->get('date', now()->toDateString());
+        $startDate = $request->get('start_date', $date);
+        $endDate = $request->get('end_date', $date);
 
         try {
             // 1. Pull Master Data (Bersifat opsional, jika gagal tetap lanjut ke KPI)
@@ -39,11 +41,18 @@ class ManualSyncController extends Controller
                 \Log::error("Sync Master Data failed: " . $e->getMessage());
             }
 
-            // 2. Regenerate KPI for the selected date (Ini yang utama)
-            DailyKpiService::generateOperatorDaily($date);
-            DailyKpiService::generateMachineDaily($date);
+            // 2. Regenerate KPI for the range (or single date)
+            $current = \Carbon\Carbon::parse($startDate);
+            $last = \Carbon\Carbon::parse($endDate);
 
-            return back()->with('success', 'KPI telah diperbarui untuk tanggal ' . $date . '. (Sinkronisasi master data mungkin tidak sempurna jika ada error di master)');
+            while ($current->lte($last)) {
+                DailyKpiService::generateOperatorDaily($current->toDateString());
+                DailyKpiService::generateMachineDaily($current->toDateString());
+                $current->addDay();
+            }
+
+            $dateLabel = ($startDate === $endDate) ? $startDate : "$startDate s/d $endDate";
+            return back()->with('success', 'KPI telah diperbarui untuk ' . $dateLabel);
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal melakukan sinkronisasi: ' . $e->getMessage());
         }

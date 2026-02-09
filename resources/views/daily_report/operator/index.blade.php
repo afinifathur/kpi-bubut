@@ -43,8 +43,10 @@
                     <div class="flex items-center gap-6 text-right">
                         <div>
                             <p class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Total Output</p>
-                            <p class="text-sm font-bold text-gray-800">{{ number_format($row->total_qty) }} <span
-                                    class="text-[10px] font-normal text-gray-500">pcs</span></p>
+                            <p class="text-sm font-bold text-gray-800">
+                                {{ number_format($row->total_qty) }} / {{ number_format($row->total_target) }}
+                                <span class="text-[10px] font-normal text-gray-500">pcs</span>
+                            </p>
                         </div>
                         <div class="w-px h-8 bg-gray-100"></div>
                         <div>

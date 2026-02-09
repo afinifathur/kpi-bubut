@@ -92,14 +92,12 @@
                             <div class="text-[10px] text-gray-400 mt-1">{{ $log->model }}</div>
                         </td>
                         <td class="px-6 py-4">
-                            @if($log->details)
-                                <div class="relative group cursor-pointer inline-block">
-                                    <span class="text-blue-500 underline text-xs">Lihat Data</span>
-                                    <!-- Simple Tooltip for Data Snapshot -->
-                                    <div class="absolute left-0 bottom-full mb-2 hidden group-hover:block w-64 bg-gray-800 text-white text-xs rounded p-2 z-10 shadow-lg whitespace-pre-wrap font-mono">
-                                        {{ json_encode($log->details, JSON_PRETTY_PRINT) }}
-                                    </div>
-                                </div>
+                            @if ($log->details)
+                                <button type="button"
+                                    onclick="viewDetail({{ json_encode($log->details) }}, '{{ $log->action }}', '{{ $log->model }}')"
+                                    class="text-blue-600 hover:text-blue-800 underline text-xs font-medium focus:outline-none">
+                                    Lihat Data
+                                </button>
                             @else
                                 <span class="text-gray-400">-</span>
                             @endif
@@ -123,4 +121,96 @@
         @endif
     </div>
 
+    </div>
+
+    @push('scripts')
+    <script>
+        function viewDetail(details, action, model) {
+            // Mapping technical keys to human-readable Indonesian labels
+            const keyMap = {
+                // Common
+                'id': 'ID',
+                'name': 'Nama',
+                'email': 'Email',
+                'role': 'Role',
+                'created_at': 'Waktu Dibuat',
+                'updated_at': 'Waktu Diupdate',
+                
+                // Production / Production Input
+                'production_date': 'Tanggal Produksi',
+                'item_name': 'Nama Item',
+                'item_code': 'Kode Item',
+                'qty_pcs': 'Jumlah (PCS)',
+                'qty_kg': 'Jumlah (KG)',
+                'process': 'Proses',
+                'operator_name': 'Nama Operator',
+                'remark': 'Keterangan',
+                'shift': 'Shift',
+                'mesin': 'Mesin',
+                'target_pcs': 'Target (PCS)',
+                'target_kg': 'Target (KG)',
+                'category': 'Kategori',
+                'description': 'Deskripsi',
+
+                // Downtime
+                'reason': 'Alasan',
+                'duration': 'Durasi (Menit)',
+                'start_time': 'Waktu Mulai',
+                'end_time': 'Waktu Selesai',
+
+                // Reject
+                'reject_type': 'Jenis Reject',
+                'defra_pcs': 'Reject (PCS)',
+                'defra_kg': 'Reject (KG)',
+            };
+
+            let tableHtml = `
+                <div class="text-left">
+                    <div class="mb-4 pb-2 border-b border-gray-100 italic text-gray-500 text-xs">
+                        Aksi: ${action} | Model: ${model}
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left border-collapse">
+                            <tbody>
+            `;
+
+            for (const [key, value] of Object.entries(details)) {
+                const label = keyMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                let displayValue = value;
+
+                // Handle arrays or objects if any (pretty print)
+                if (typeof value === 'object' && value !== null) {
+                    displayValue = `<pre class="bg-gray-50 p-1 rounded font-mono text-[10px]">${JSON.stringify(value, null, 2)}</pre>`;
+                }
+
+                tableHtml += `
+                    <tr class="border-b border-gray-50">
+                        <th class="py-2 pr-4 font-semibold text-gray-500 w-1/3 align-top whitespace-nowrap">${label}</th>
+                        <td class="py-2 text-gray-800 break-words">${displayValue ?? '-'}</td>
+                    </tr>
+                `;
+            }
+
+            tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Detail Aktivitas',
+                html: tableHtml,
+                width: '600px',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#3b82f6',
+                customClass: {
+                    container: 'my-swal-container',
+                    popup: 'rounded-xl',
+                    title: 'text-lg font-bold text-gray-800'
+                }
+            });
+        }
+    </script>
+    @endpush
 @endsection

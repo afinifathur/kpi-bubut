@@ -1,3 +1,11 @@
+@font-face {
+    font-family: 'Material Icons Round';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../../public/fonts/material-icons-round-latin-400-normal.woff2') format('woff2'),
+        url('../../public/fonts/material-icons-round-latin-400-normal.woff') format('woff');
+}
+
 @import 'tailwindcss';
 @import '@fontsource/inter';
 @import '@fontsource/material-icons-round';

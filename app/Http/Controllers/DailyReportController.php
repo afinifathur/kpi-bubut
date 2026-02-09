@@ -61,6 +61,7 @@ class DailyReportController extends Controller
         $dates = ProductionLog::selectRaw('
                 production_date, 
                 SUM(actual_qty) as total_qty, 
+                SUM(target_qty) as total_target, 
                 AVG(achievement_percent) as avg_kpi,
                 COUNT(*) as total_logs
             ')

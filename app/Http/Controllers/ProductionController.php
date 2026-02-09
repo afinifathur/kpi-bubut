@@ -168,6 +168,10 @@ class ProductionController extends Controller
             'remark' => $validated['remark'] ?? null,
         ]);
 
+        // Regenerate KPI (Daily Recap)
+        \App\Services\DailyKpiService::generateOperatorDaily($validated['production_date']);
+        \App\Services\DailyKpiService::generateMachineDaily($validated['production_date']);
+
         return redirect()
             ->back()
             ->with('success', "Data produksi a.n. {$operator->name} berhasil disimpan.");

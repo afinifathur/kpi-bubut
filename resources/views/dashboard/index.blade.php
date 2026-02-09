@@ -123,7 +123,7 @@
             {{-- Weekly Production Chart --}}
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-6">
-                    <h4 class="text-sm font-bold text-slate-800">Grafik Produksi Mingguan</h4>
+                    <h4 class="text-sm font-bold text-slate-800">Grafik Produksi (7 Hari Aktif)</h4>
                     <span class="material-icons-round text-slate-400">bar_chart</span>
                 </div>
                 <div class="relative h-64 w-full">
@@ -347,7 +347,7 @@
                     data: dataPoints,
                     borderColor: color,
                     backgroundColor: color,
-                    tension: 0.4,
+                    tension: 0,
                     borderWidth: 2,
                     pointRadius: 3,
                     pointHoverRadius: 5
