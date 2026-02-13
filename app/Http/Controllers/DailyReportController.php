@@ -85,23 +85,53 @@ class DailyReportController extends Controller
      * SHOW (DETAIL HARIAN)
      * ===============================
      */
-    public function operatorShow($date)
+    public function operatorShow(Request $request, $date)
     {
         // Check Lock
         $isLocked = \App\Services\DateLockService::isLocked($date);
 
-        // Ambil data detail per baris log (bukan summary)
-        $rows = ProductionLog::with(['operator', 'machine', 'item'])
-            ->where('production_date', $date)
-            ->orderBy('shift')
-            ->orderBy('operator_code')
-            ->orderBy('time_start')
-            ->get();
+        // Sorting parameters
+        $sort = $request->get('sort', 'default');
+        $direction = $request->get('direction', 'asc');
+
+        // Validate direction
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
+        // Map sort column names to database fields
+        $sortColumns = [
+            'shift' => 'shift',
+            'operator' => 'operator_code',
+            'machine' => 'machine_code',
+            'work_hours' => 'work_hours',
+            'target' => 'target_qty',
+            'actual' => 'actual_qty',
+            'kpi' => 'achievement_percent',
+        ];
+
+        // Build query
+        $query = ProductionLog::with(['operator', 'machine', 'item'])
+            ->where('production_date', $date);
+
+        // Apply sorting
+        if ($sort !== 'default' && isset($sortColumns[$sort])) {
+            $query->orderBy($sortColumns[$sort], $direction);
+        } else {
+            // Default sorting (shift → operator → time)
+            $query->orderBy('shift')
+                ->orderBy('operator_code')
+                ->orderBy('time_start');
+        }
+
+        $rows = $query->get();
 
         return view('daily_report.operator.show', [
             'rows' => $rows,
             'date' => $date,
-            'isLocked' => $isLocked
+            'isLocked' => $isLocked,
+            'currentSort' => $sort,
+            'currentDirection' => $direction,
         ]);
     }
 
@@ -142,18 +172,85 @@ class DailyReportController extends Controller
      * EXPORT PDF (PORTRAIT)
      * ===============================
      */
-    public function operatorExportPdf($date)
+    public function operatorExportPdf(Request $request, $date)
     {
-        $rows = ProductionLog::with(['operator', 'machine', 'item'])
-            ->where('production_date', $date)
-            ->orderBy('shift')
-            ->orderBy('operator_code')
-            ->orderBy('time_start')
-            ->get();
+        // Sorting parameters (same as web view)
+        $sort = $request->get('sort', 'default');
+        $direction = $request->get('direction', 'asc');
+
+        // Validate direction
+        if (!in_array($direction, ['asc', 'desc'])) {
+            $direction = 'asc';
+        }
+
+        // Map sort column names to database fields
+        $sortColumns = [
+            'shift' => 'shift',
+            'operator' => 'operator_code',
+            'machine' => 'machine_code',
+            'work_hours' => 'work_hours',
+            'target' => 'target_qty',
+            'actual' => 'actual_qty',
+            'kpi' => 'achievement_percent',
+        ];
+
+        // Build query
+        $query = ProductionLog::with(['operator', 'machine', 'item'])
+            ->where('production_date', $date);
+
+        // Apply sorting
+        if ($sort !== 'default' && isset($sortColumns[$sort])) {
+            $query->orderBy($sortColumns[$sort], $direction);
+        } else {
+            // Default sorting (shift → operator → time)
+            $query->orderBy('shift')
+                ->orderBy('operator_code')
+                ->orderBy('time_start');
+        }
+
+        $rows = $query->get();
+
+        // Calculate shift summaries (Shift 1, 2, 3)
+        $shiftSummary = [];
+        for ($shift = 1; $shift <= 3; $shift++) {
+            $shiftData = $rows->where('shift', $shift);
+            $totalActual = $shiftData->sum('actual_qty');
+            $totalTarget = $shiftData->sum('target_qty');
+
+            $shiftSummary[$shift] = [
+                'actual' => $totalActual,
+                'target' => $totalTarget,
+                'percentage' => $totalTarget > 0
+                    ? round(($totalActual / $totalTarget) * 100, 1)
+                    : 0,
+                'count' => $shiftData->count(),
+            ];
+        }
+
+        // Calculate daily total (all shifts combined)
+        $dailyTotal = [
+            'actual' => $rows->sum('actual_qty'),
+            'target' => $rows->sum('target_qty'),
+            'percentage' => $rows->sum('target_qty') > 0
+                ? round(($rows->sum('actual_qty') / $rows->sum('target_qty')) * 100, 1)
+                : 0,
+        ];
+
+        // Calculate remark breakdown (keterangan)
+        $remarkBreakdown = $rows->groupBy('remark')->map(function ($group, $remarkKey) {
+            return [
+                'label' => empty($remarkKey) ? 'Normal (Selesai)' : $remarkKey,
+                'qty' => $group->sum('actual_qty'),
+                'count' => $group->count(),
+            ];
+        })->sortByDesc('qty')->values();
 
         $pdf = Pdf::loadView('daily_report.operator.pdf', [
             'rows' => $rows,
             'date' => $date,
+            'shiftSummary' => $shiftSummary,
+            'dailyTotal' => $dailyTotal,
+            'remarkBreakdown' => $remarkBreakdown,
         ]);
 
         // Portrait orientation as requested

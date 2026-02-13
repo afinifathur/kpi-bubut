@@ -171,6 +171,67 @@
         </tbody>
     </table>
 
+    {{-- ============================================ --}}
+    {{-- SUMMARY SECTION (RINGKASAN) --}}
+    {{-- ============================================ --}}
+    <div style="margin-top: 25px; page-break-inside: avoid;">
+
+        {{-- Shift Summaries --}}
+        <div style="border-top: 1px solid #999; padding-top: 12px; margin-bottom: 10px;">
+            <h3 style="font-size: 10pt; font-weight: bold; margin: 0 0 8px 0; color: #333;">Ringkasan Per Shift</h3>
+
+            @foreach([1, 2, 3] as $shiftNum)
+                @if(isset($shiftSummary[$shiftNum]) && $shiftSummary[$shiftNum]['count'] > 0)
+                    <div style="padding: 3px 0; font-size: 9pt; line-height: 1.4;">
+                        <strong>Shift {{ $shiftNum }}:</strong>
+                        {{ number_format($shiftSummary[$shiftNum]['actual']) }} pcs /
+                        {{ number_format($shiftSummary[$shiftNum]['target']) }} pcs target
+                        @php
+                            $pct = $shiftSummary[$shiftNum]['percentage'];
+                            $color = $pct >= 100 ? 'green' : ($pct >= 85 ? 'orange' : 'red');
+                        @endphp
+                        <span style="color: {{ $color }}; font-weight: bold;">
+                            ({{ $pct }}%)
+                        </span>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+
+        {{-- Daily Total --}}
+        <div style="border-top: 2px solid #666; padding: 10px 0 8px 0; margin-bottom: 8px;">
+            @php
+                $dailyPct = $dailyTotal['percentage'];
+                $dailyColor = $dailyPct >= 100 ? 'green' : ($dailyPct >= 85 ? 'orange' : 'red');
+            @endphp
+            <div style="font-size: 10pt; font-weight: bold; color: #000;">
+                <strong>Total Harian:</strong>
+                {{ number_format($dailyTotal['actual']) }} pcs /
+                {{ number_format($dailyTotal['target']) }} pcs target
+                <span style="color: {{ $dailyColor }};">
+                    ({{ $dailyPct }}%)
+                </span>
+            </div>
+        </div>
+
+        {{-- Remark Breakdown --}}
+        <div style="border-top: 2px solid #666; padding-top: 10px; margin-bottom: 10px;">
+            <h3 style="font-size: 10pt; font-weight: bold; margin: 0 0 6px 0; color: #333;">Detail Keterangan</h3>
+            <table style="width: 100%; font-size: 9pt; border-collapse: collapse;">
+                @foreach($remarkBreakdown as $remark)
+                    <tr>
+                        <td style="padding: 2px 0; width: 60%;">{{ $remark['label'] }}</td>
+                        <td style="text-align: right; font-weight: bold; width: 25%;">{{ number_format($remark['qty']) }}
+                            pcs</td>
+                        <td style="text-align: right; color: #666; padding-left: 8px; width: 15%;">({{ $remark['count'] }}x)
+                        </td>
+                    </tr>
+                @endforeach
+            </table>
+        </div>
+    </div>
+
+    {{-- Signatures Section --}}
     <table class="signatures">
         <tr>
             <td width="33%">

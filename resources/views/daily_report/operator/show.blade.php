@@ -48,7 +48,8 @@
                 </button>
             </form>
 
-            <a href="{{ route('daily_report.operator.pdf', $date) }}" target="_blank"
+            <a href="{{ route('daily_report.operator.pdf', ['date' => $date, 'sort' => $currentSort, 'direction' => $currentDirection]) }}"
+                target="_blank"
                 class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg">
@@ -77,14 +78,102 @@
                 <thead
                     class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100 font-semibold tracking-wider">
                     <tr>
-                        <th class="px-4 py-3 text-center w-16">Shift</th>
-                        <th class="px-4 py-3">Operator</th>
-                        <th class="px-4 py-3">Mesin</th>
+                        {{-- Sortable Header Helper --}}
+                        @php
+                            function getSortUrl($column, $currentSort, $currentDirection, $date)
+                            {
+                                if ($currentSort === $column) {
+                                    // Toggle direction
+                                    $newDirection = $currentDirection === 'asc' ? 'desc' : 'asc';
+                                } else {
+                                    // Default to asc for new column
+                                    $newDirection = 'asc';
+                                }
+                                return route('daily_report.operator.show', ['date' => $date, 'sort' => $column, 'direction' => $newDirection]);
+                            }
+
+                            function getSortArrow($column, $currentSort, $currentDirection)
+                            {
+                                if ($currentSort === $column) {
+                                    return $currentDirection === 'asc' ? '↑' : '↓';
+                                }
+                                return '↕';
+                            }
+
+                            function isSorted($column, $currentSort)
+                            {
+                                return $currentSort === $column;
+                            }
+                        @endphp
+
+                        {{-- Shift - Sortable --}}
+                        <th class="px-4 py-3 text-center w-16">
+                            <a href="{{ getSortUrl('shift', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-center gap-1 hover:text-blue-600 transition-colors {{ isSorted('shift', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Shift
+                                <span class="text-xs">{{ getSortArrow('shift', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Operator - Sortable --}}
+                        <th class="px-4 py-3">
+                            <a href="{{ getSortUrl('operator', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center gap-1 hover:text-blue-600 transition-colors {{ isSorted('operator', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Operator
+                                <span class="text-xs">{{ getSortArrow('operator', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Mesin - Sortable --}}
+                        <th class="px-4 py-3">
+                            <a href="{{ getSortUrl('machine', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center gap-1 hover:text-blue-600 transition-colors {{ isSorted('machine', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Mesin
+                                <span class="text-xs">{{ getSortArrow('machine', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Item & Heat No - Not Sortable --}}
                         <th class="px-4 py-3">Item & Heat No</th>
-                        <th class="px-4 py-3 text-right">Jam Kerja</th>
-                        <th class="px-4 py-3 text-right">Target</th>
-                        <th class="px-4 py-3 text-right">Aktual</th>
-                        <th class="px-4 py-3 text-center">KPI (%)</th>
+
+                        {{-- Jam Kerja - Sortable --}}
+                        <th class="px-4 py-3 text-right">
+                            <a href="{{ getSortUrl('work_hours', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-end gap-1 hover:text-blue-600 transition-colors {{ isSorted('work_hours', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Jam Kerja
+                                <span
+                                    class="text-xs">{{ getSortArrow('work_hours', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Target - Sortable --}}
+                        <th class="px-4 py-3 text-right">
+                            <a href="{{ getSortUrl('target', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-end gap-1 hover:text-blue-600 transition-colors {{ isSorted('target', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Target
+                                <span class="text-xs">{{ getSortArrow('target', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Aktual - Sortable --}}
+                        <th class="px-4 py-3 text-right">
+                            <a href="{{ getSortUrl('actual', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-end gap-1 hover:text-blue-600 transition-colors {{ isSorted('actual', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Aktual
+                                <span class="text-xs">{{ getSortArrow('actual', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- KPI (%) - Sortable --}}
+                        <th class="px-4 py-3 text-center">
+                            <a href="{{ getSortUrl('kpi', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-center gap-1 hover:text-blue-600 transition-colors {{ isSorted('kpi', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                KPI (%)
+                                <span class="text-xs">{{ getSortArrow('kpi', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
+                        {{-- Aksi - Not Sortable --}}
                         <th class="px-4 py-3 text-center">Aksi</th>
                     </tr>
                 </thead>
