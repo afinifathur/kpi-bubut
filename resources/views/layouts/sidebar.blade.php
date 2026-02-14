@@ -1,4 +1,5 @@
-<aside class="w-64 min-h-screen bg-[#1a2c5a] text-white flex flex-col transition-all duration-300">
+<aside class="w-64 sticky top-0 h-screen bg-[#1a2c5a] text-white flex flex-col overflow-y-auto scrollbar-thin"
+    style="scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent">
     <div class="h-16 flex items-center px-6 border-b border-white/10 shrink-0">
         <span class="material-icons-round text-2xl mr-2 text-blue-400">precision_manufacturing</span>
         <div>
