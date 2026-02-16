@@ -113,13 +113,17 @@
 
         <a href="{{ url('/dashboard') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('dashboard') && !request()->is('dashboard/*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">dashboard</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">dashboard</span>
+            </div>
             <span class="font-medium">Dashboard</span>
         </a>
 
         <a href="{{ url('/dashboard/operator') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('dashboard/operator') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">monitoring</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">insights</span>
+            </div>
             <span class="font-medium">KPI Trend</span>
         </a>
 
@@ -128,19 +132,25 @@
 
             <a href="{{ route('production.create') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('production.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-                <span class="material-icons-round text-xl">add_circle_outline</span>
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">add_circle</span>
+                </div>
                 <span class="font-medium">Input Produksi</span>
             </a>
 
             <a href="{{ route('reject.create') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('reject.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-                <span class="material-icons-round text-xl">error_outline</span>
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">error</span>
+                </div>
                 <span class="font-medium">Input Reject</span>
             </a>
 
             <a href="{{ route('downtime.create') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('downtime.create') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-                <span class="material-icons-round text-xl">timer_off</span>
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">timer_off</span>
+                </div>
                 <span class="font-medium">Input Downtime</span>
             </a>
         @endif
@@ -149,19 +159,25 @@
 
         <a href="{{ url('/tracking/operator') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('tracking/operator') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">people_outline</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">groups</span>
+            </div>
             <span class="font-medium">Operator KPI</span>
         </a>
 
         <a href="{{ url('/tracking/mesin') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('tracking/mesin') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">precision_manufacturing</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">precision_manufacturing</span>
+            </div>
             <span class="font-medium">Mesin KPI</span>
         </a>
 
         <a href="{{ url('/downtime') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('downtime') && !request()->is('downtime/input') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">history</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">history</span>
+            </div>
             <span class="font-medium">Riwayat Downtime</span>
         </a>
 
@@ -169,13 +185,17 @@
 
         <a href="{{ route('daily_report.operator.index') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('daily_report.operator.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">assignment_ind</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">assignment_ind</span>
+            </div>
             <span class="font-medium">Operator</span>
         </a>
 
         <a href="{{ route('daily_report.downtime.index') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('daily_report.downtime.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-            <span class="material-icons-round text-xl">timer_off</span>
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">timer_off</span>
+            </div>
             <span class="font-medium">Downtime</span>
         </a>
 
@@ -184,7 +204,9 @@
 
             <a href="{{ route('audit_logs.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('audit_logs.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
-                <span class="material-icons-round text-xl">security</span>
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">security</span>
+                </div>
                 <span class="font-medium">Audit Logs</span>
             </a>
         @endif
