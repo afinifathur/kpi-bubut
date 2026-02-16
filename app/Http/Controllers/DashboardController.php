@@ -173,4 +173,119 @@ class DashboardController extends Controller
             'machineSummary'
         ));
     }
+
+    /**
+     * ===============================
+     * DASHBOARD OPERATOR - KPI TREND LINE CHART
+     * ===============================
+     */
+    public function operatorDashboard()
+    {
+        // Default: last 31 days
+        $endDate = request('end_date', date('Y-m-d'));
+        $startDate = request('start_date', \Carbon\Carbon::parse($endDate)->subDays(30)->format('Y-m-d'));
+        $operatorCode = request('operator_code');
+
+        // Validation: max 31 days
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        $diff = $start->diffInDays($end);
+
+        if ($diff > 31) {
+            return redirect()->route('dashboard.operator', [
+                'start_date' => $startDate,
+                'end_date' => $start->copy()->addDays(31)->format('Y-m-d'),
+                'operator_code' => $operatorCode
+            ])->with('error', 'Maksimal rentang tanggal adalah 31 hari. Tanggal akhir telah disesuaikan.');
+        }
+
+        // Query KPI data
+        $query = \App\Models\DailyKpiOperator::query()
+            ->whereBetween('kpi_date', [$startDate, $endDate]);
+
+        if ($operatorCode && $operatorCode !== 'all') {
+            $query->where('operator_code', $operatorCode);
+        }
+
+        $kpiData = $query->orderBy('kpi_date')
+            ->orderBy('operator_code')
+            ->get();
+
+        // Build date labels (all dates in range that have data)
+        $dateLabels = $kpiData->pluck('kpi_date')->unique()->sort()->values()->toArray();
+
+        // Build datasets per operator
+        $operatorGroups = $kpiData->groupBy('operator_code');
+        $chartDatasets = [];
+
+        // Color palette
+        $colors = [
+            '#2563eb',
+            '#db2777',
+            '#16a34a',
+            '#d97706',
+            '#9333ea',
+            '#0891b2',
+            '#dc2626',
+            '#059669',
+            '#7c3aed',
+            '#ea580c',
+            '#0284c7',
+            '#c026d3',
+            '#65a30d',
+            '#e11d48',
+            '#4f46e5',
+            '#0d9488',
+            '#f59e0b',
+            '#6366f1',
+            '#14b8a6',
+            '#f43f5e',
+        ];
+        $colorIndex = 0;
+
+        foreach ($operatorGroups as $opCode => $records) {
+            $dataByDate = $records->keyBy('kpi_date');
+            $dataPoints = [];
+
+            foreach ($dateLabels as $date) {
+                $dataPoints[] = isset($dataByDate[$date])
+                    ? round((float) $dataByDate[$date]->kpi_percent, 1)
+                    : null; // null = gap in line
+            }
+
+            $color = $colors[$colorIndex % count($colors)];
+            $colorIndex++;
+
+            $chartDatasets[] = [
+                'label' => $opCode,
+                'data' => $dataPoints,
+                'borderColor' => $color,
+                'backgroundColor' => $color,
+                'tension' => 0.3,
+                'borderWidth' => 2,
+                'pointRadius' => 3,
+                'pointHoverRadius' => 6,
+                'fill' => false,
+                'spanGaps' => true,
+            ];
+        }
+
+        // Operator names for dropdown
+        $operatorNames = \App\Models\MdOperatorMirror::orderBy('name')->pluck('name', 'code');
+
+        // Format date labels for display (dd/mm)
+        $formattedLabels = array_map(function ($d) {
+            return \Carbon\Carbon::parse($d)->format('d/m');
+        }, $dateLabels);
+
+        return view('dashboard.operator', [
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'selectedOperator' => $operatorCode,
+            'operatorNames' => $operatorNames,
+            'chartLabels' => $formattedLabels,
+            'chartDatasets' => $chartDatasets,
+            'rawDateLabels' => $dateLabels,
+        ]);
+    }
 }

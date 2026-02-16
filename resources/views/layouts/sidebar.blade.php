@@ -112,9 +112,15 @@
         <p class="px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider mb-2">Menu Utama</p>
 
         <a href="{{ url('/dashboard') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('dashboard') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('dashboard') && !request()->is('dashboard/*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
             <span class="material-icons-round text-xl">dashboard</span>
             <span class="font-medium">Dashboard</span>
+        </a>
+
+        <a href="{{ url('/dashboard/operator') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('dashboard/operator') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+            <span class="material-icons-round text-xl">monitoring</span>
+            <span class="font-medium">Trend Operator</span>
         </a>
 
         @if(!$isReadOnly)
