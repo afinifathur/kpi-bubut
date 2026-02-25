@@ -52,10 +52,19 @@ if (!(Test-Path $LaragonMysql)) {
 # ============================================
 # FUNGSI
 # ============================================
-function Log-Info($message) { Write-Host "[INFO] $message" -ForegroundColor Cyan }
-function Log-Success($message) { Write-Host "[SUCCESS] $message" -ForegroundColor Green }
-function Log-Error($message) { Write-Host "[ERROR] $message" -ForegroundColor Red }
-function Log-Warning($message) { Write-Host "[WARNING] $message" -ForegroundColor Yellow }
+$DetailedLogFile = "C:\laragon\www\kpi-bubut\scripts\sync_log_detail.txt"
+
+function Log-Message($level, $message) {
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logEntry = "[$timestamp] [$level] $message"
+    Write-Host $logEntry -ForegroundColor ($ifelse = if ($level -eq "ERROR") { "Red" } elseif ($level -eq "SUCCESS") { "Green" } elseif ($level -eq "WARNING") { "Yellow" } else { "Cyan" })
+    Add-Content -Path $DetailedLogFile -Value $logEntry
+}
+
+function Log-Info($message) { Log-Message "INFO" $message }
+function Log-Success($message) { Log-Message "SUCCESS" $message }
+function Log-Error($message) { Log-Message "ERROR" $message }
+function Log-Warning($message) { Log-Message "WARNING" $message }
 
 # ============================================
 # MAIN SCRIPT
@@ -68,15 +77,16 @@ $Databases = @(
     @{ Name = "masterdata_kpi"; Container = "masterdatakpi-db"; User = "root" }
 )
 
-Write-Host ""
-Write-Host "============================================" -ForegroundColor Magenta
-Write-Host "   PRODUCTION TO LOCAL DB SYNC SCRIPT" -ForegroundColor Magenta
-Write-Host "============================================" -ForegroundColor Magenta
+Log-Info "============================================"
+Log-Info "   PRODUCTION TO LOCAL DB SYNC SCRIPT"
+Log-Info "============================================"
 
 # Step 1: Buat direktori backup lokal
 if (!(Test-Path $LocalBackupDir)) {
     New-Item -ItemType Directory -Path $LocalBackupDir -Force | Out-Null
 }
+
+$GlobalSuccess = $true
 
 foreach ($Db in $Databases) {
     $DbName = $Db.Name
@@ -87,58 +97,67 @@ foreach ($Db in $Databases) {
     $serverBackupPath = "$ServerBackupDir/$backupFileName"
     $localBackupPath = "$LocalBackupDir\$backupFileName"
 
-    Write-Host "`n>>> SINKRONISASI DATABASE: $DbName" -ForegroundColor Yellow
+    Log-Info ""
+    Log-Info ">>> SINKRONISASI DATABASE: $DbName"
     
     # 1. Export di Server (Direct Docker Exec)
     Log-Info "Mengekspor $DbName dari container $Container di server..."
-    # Kita gunakan docker exec langsung ke container name untuk menghindari issue path/compose
     $exportCmd = "docker exec -i $Container mysqldump -u$DbUser -p123456788 $DbName > $serverBackupPath"
     
-    ssh $ServerSSH $exportCmd
+    ssh $ServerSSH $exportCmd 2>&1 | Add-Content -Path $DetailedLogFile
     if ($LASTEXITCODE -ne 0) {
         Log-Error "Gagal ekspor $DbName. Pastikan SSH key terpasang dan sudo tidak butuh password."
+        $GlobalSuccess = $false
         continue
     }
 
     # 2. Download File
     Log-Info "Mendownload $backupFileName..."
-    scp "${ServerSSH}:$serverBackupPath" $localBackupPath
+    scp "${ServerSSH}:$serverBackupPath" $localBackupPath 2>&1 | Add-Content -Path $DetailedLogFile
     if ($LASTEXITCODE -ne 0) {
         Log-Error "Gagal mendownload file."
+        $GlobalSuccess = $false
         continue
     }
 
     # 3. Import ke Lokal
     Log-Info "Menginput data ke MySQL Lokal (Laragon)..."
-    try {
-        if (Test-Path $localBackupPath) {
-            Get-Content -Raw $localBackupPath | & $LaragonMysql -u$LocalDbUser -p$LocalDbPass $DbName
-            if ($LASTEXITCODE -eq 0) {
-                Log-Success "Sinkronisasi $DbName SELESAI!"
-            }
-            else {
-                Log-Error "Gagal mengimport ke database lokal (Exit Code: $LASTEXITCODE)."
-            }
+    if (Test-Path $localBackupPath) {
+        # Gunakan CMD redirection untuk stabilitas lebih baik pada file besar
+        Log-Info "Menjalankan import menggunakan CMD redirection..."
+        $importCmd = "cmd /c `"`"$LaragonMysql`" -u$LocalDbUser -p$LocalDbPass $DbName < `"$localBackupPath`"`""
+        Invoke-Expression $importCmd 2>&1 | Add-Content -Path $DetailedLogFile
+        
+        if ($LASTEXITCODE -eq 0) {
+            Log-Success "Sinkronisasi $DbName SELESAI!"
         }
         else {
-            Log-Error "File backup lokal tidak ditemukan: $localBackupPath"
+            Log-Error "Gagal mengimport ke database lokal (Exit Code: $LASTEXITCODE). Cek sync_log_detail.txt untuk detail."
+            $GlobalSuccess = $false
         }
     }
-    catch {
-        Log-Error "Exception saat import: $_"
+    else {
+        Log-Error "File backup lokal tidak ditemukan: $localBackupPath"
+        $GlobalSuccess = $false
     }
 
     # 4. Cleanup Server
     Log-Info "Membersihkan file temporary di server..."
-    ssh $ServerSSH "rm -f $serverBackupPath"
+    ssh $ServerSSH "rm -f $serverBackupPath" 2>&1 | Add-Content -Path $DetailedLogFile
 }
 
 # Step Final: Bersihkan backup lama di lokal
-Log-Info "`nMembersihkan backup lama di lokal ( > $KeepDays hari)..."
+Log-Info ""
+Log-Info "Membersihkan backup lama di lokal ( > $KeepDays hari)..."
 Get-ChildItem "$LocalBackupDir\prod_*.sql" | Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$KeepDays) } | Remove-Item -Force
 
-Write-Host ""
-Write-Host "============================================" -ForegroundColor Green
-Write-Host "   SINKRONISASI SELESAI - DATA TERBARU!" -ForegroundColor Green
-Write-Host "============================================" -ForegroundColor Green
-Write-Host ""
+Log-Info ""
+Log-Info "============================================"
+if ($GlobalSuccess) {
+    Log-Success "   SINKRONISASI SELESAI - DATA TERBARU!"
+} else {
+    Log-Error "   SINKRONISASI SELESAI DENGAN BEBERAPA KEGAGALAN."
+    exit 1
+}
+Log-Info "============================================"
+Log-Info ""

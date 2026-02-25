@@ -87,6 +87,18 @@
             width: 80%;
             padding-top: 5px;
         }
+
+        .pdf-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            font-size: 7pt;
+            color: #888;
+            border-top: 1px solid #ccc;
+            padding-top: 3px;
+            text-align: center;
+        }
     </style>
 </head>
 
@@ -177,6 +189,12 @@
             </td>
         </tr>
     </table>
+
+    <div class="pdf-footer">
+        IP: {{ request()->ip() }} &nbsp;|&nbsp;
+        User: {{ auth()->user()->name ?? 'Guest' }} &nbsp;|&nbsp;
+        Digenerate: {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}
+    </div>
 
 </body>
 

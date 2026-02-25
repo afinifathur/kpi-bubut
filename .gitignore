@@ -20,6 +20,7 @@
 /storage/logs/*
 /storage/pail
 /vendor
+/backups
 Homestead.json
 Homestead.yaml
 Thumbs.db
