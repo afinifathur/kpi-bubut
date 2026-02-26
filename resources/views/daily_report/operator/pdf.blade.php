@@ -64,7 +64,7 @@
 
         /* Column Widths */
         .col-shift {
-            width: 25px;
+            width: 12px;
             text-align: center;
         }
 
@@ -78,7 +78,7 @@
         }
 
         .col-item {
-            width: 33%;
+            width: 30%;
         }
 
         .col-time {
@@ -87,8 +87,9 @@
         }
 
         .col-num {
-            width: 7%;
+            width: 9%;
             text-align: right;
+            white-space: nowrap;
         }
 
         .col-kpi {
@@ -144,6 +145,17 @@
             </tr>
         </thead>
         <tbody>
+            @php
+                $opTotals = [];
+                foreach ($rows as $r) {
+                    $op = $r->operator_code;
+                    if (!isset($opTotals[$op])) {
+                        $opTotals[$op] = ['actual' => 0, 'target' => 0];
+                    }
+                    $opTotals[$op]['actual'] += $r->actual_qty;
+                    $opTotals[$op]['target'] += $r->target_qty;
+                }
+            @endphp
             @foreach($rows as $row)
                 <tr>
                     <td class="text-center">{{ $row->shift }}</td>
@@ -152,7 +164,7 @@
                         <small>{{ $row->operator_code }}</small>
                     </td>
                     <td class="col-mc">{{ $row->machine_code }}</td>
-                    <td>
+                    <td style="font-size: 8pt;">
                         {{ $row->item->name ?? $row->item_code }}
                         @if($row->heat_number)
                             <br><small>HN: {{ $row->heat_number }}</small>
@@ -178,8 +190,21 @@
                                 $class = 'kpi-good';
                             elseif ($row->achievement_percent >= 85)
                                 $class = 'kpi-mid';
+
+                            $opTotal = $opTotals[$row->operator_code];
+                            $opAvg = $opTotal['target'] > 0 ? round(($opTotal['actual'] / $opTotal['target']) * 100, 2) : 0;
+                            $avgClass = 'kpi-bad';
+                            if ($opAvg >= 100)
+                                $avgClass = 'kpi-good';
+                            elseif ($opAvg >= 85)
+                                $avgClass = 'kpi-mid';
                         @endphp
                         <span class="{{ $class }}">{{ $row->achievement_percent }}%</span>
+                        <div style="margin-top: 4px; border-top: 1px dotted #ccc; padding-top: 4px;">
+                            <span style="font-size: 7.5pt; color: #888;">Rata2 Harian</span><br>
+                            <span class="{{ $avgClass }}"
+                                style="font-size: 8.5pt;">{{ number_format($opAvg, 2, '.', '') }}%</span>
+                        </div>
                     </td>
                 </tr>
             @endforeach
@@ -267,7 +292,7 @@
     <div class="pdf-footer">
         IP: {{ request()->ip() }} &nbsp;|&nbsp;
         User: {{ auth()->user()->name ?? 'Guest' }} &nbsp;|&nbsp;
-        Digenerate: {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}
+        Digenerate: {{ \Carbon\Carbon::now('Asia/Jakarta')->format('d/m/Y H:i:s') }}
     </div>
 
 </body>

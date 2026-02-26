@@ -176,21 +176,14 @@
 
 @push('scripts')
 <script>
-    // Initialize Select2
-    $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2
         $('.select2-search').select2({
             width: '100%',
             placeholder: 'Pilih Operator',
             allowClear: false
         });
 
-        // Re-bind change event for Select2
-        $('#operator_code').on('change', function() {
-            validateForm();
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
         const operatorSelect = document.getElementById('operator_code');
@@ -213,8 +206,6 @@
             }
 
             // 2. Multi-day Operator Constraint
-            // Logical: diffDays > 0 means distinct days (e.g. 1st to 2nd is 1 day diff). 
-            // If Start != End, we enforce operator.
             if (startDateInput.value !== endDateInput.value) {
                 const allOption = operatorSelect.querySelector('option[value="all"]');
                 if (allOption) {
@@ -222,25 +213,34 @@
                     allOption.disabled = true;
                     if (operatorSelect.value === 'all') {
                         operatorSelect.value = ''; // Reset selection
+                        $('.select2-search').trigger('change');
                     }
-                }
-                
-                // If user hasn't selected an operator yet (or was 'all')
-                if (!operatorSelect.value || operatorSelect.value === 'all') {
-                   // We don't block immediately on change, but we block on submit
                 }
             } else {
                 // If Single date, allow All
                 const allOption = operatorSelect.querySelector('option[value="all"]');
-                if (allOption) allOption.disabled = false;
+                if (allOption) {
+                    allOption.disabled = false;
+                }
             }
+            
+            // Refresh select2 to reflect option changes
+            $('.select2-search').select2({
+                width: '100%',
+                placeholder: 'Pilih Operator',
+                allowClear: false
+            });
 
             return true;
         }
 
         // Real-time checks
-        [startDateInput, endDateInput, operatorSelect].forEach(input => {
-            input.addEventListener('change', validateForm);
+        startDateInput.addEventListener('change', validateForm);
+        endDateInput.addEventListener('change', validateForm);
+        
+        // Use select2 event for change
+        $('#operator_code').on('select2:select', function (e) {
+            // Can call validateForm() here if needed, but not strictly required
         });
 
         // Initial check

@@ -88,7 +88,7 @@
     <div class="pdf-footer">
         IP: {{ request()->ip() }} &nbsp;|&nbsp;
         User: {{ auth()->user()->name ?? 'Guest' }} &nbsp;|&nbsp;
-        Digenerate: {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}
+        Digenerate: {{ \Carbon\Carbon::now('Asia/Jakarta')->format('d/m/Y H:i:s') }}
     </div>
 
 </body>
