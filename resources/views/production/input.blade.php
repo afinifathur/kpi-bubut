@@ -261,6 +261,7 @@
                             <select name="remark"
                                 class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 font-medium text-slate-700">
                                 <option value="" selected>Normal (Selesai)</option>
+                                <option value="Setengah jadi">Setengah jadi</option>
                                 <option value="K1-1 sisi">K1-1 sisi</option>
                                 <option value="K1-2 sisi">K1-2 sisi</option>
                                 <option value="K1- Finish ID">K1- Finish ID</option>

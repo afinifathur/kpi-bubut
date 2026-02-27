@@ -189,6 +189,8 @@
                         <select name="remark"
                             class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 font-medium text-slate-700">
                             <option value="" {{ empty($log->remark) ? 'selected' : '' }}>Normal (Selesai)</option>
+                            <option value="Setengah jadi" {{ $log->remark == 'Setengah jadi' ? 'selected' : '' }}>Setengah
+                                jadi</option>
                             <option value="K1-1 sisi" {{ $log->remark == 'K1-1 sisi' ? 'selected' : '' }}>K1-1 sisi</option>
                             <option value="K1-2 sisi" {{ $log->remark == 'K1-2 sisi' ? 'selected' : '' }}>K1-2 sisi</option>
                             <option value="K1- Finish ID" {{ $log->remark == 'K1- Finish ID' ? 'selected' : '' }}>K1- Finish
@@ -207,10 +209,10 @@
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Capaian</label>
                         <div class="w-full rounded-xl text-center font-bold text-lg p-3 border" :class="{
-                                                                'bg-emerald-50 text-emerald-600 border-emerald-200': achievement >= 100,
-                                                                'bg-amber-50 text-amber-600 border-amber-200': achievement >= 80 && achievement < 100,
-                                                                'bg-red-50 text-red-600 border-red-200': achievement < 80
-                                                            }">
+                                                                    'bg-emerald-50 text-emerald-600 border-emerald-200': achievement >= 100,
+                                                                    'bg-amber-50 text-amber-600 border-amber-200': achievement >= 80 && achievement < 100,
+                                                                    'bg-red-50 text-red-600 border-red-200': achievement < 80
+                                                                }">
                             <span x-text="achievement + '%'">0%</span>
                         </div>
                     </div>
