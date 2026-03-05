@@ -2,25 +2,38 @@
 
 namespace App\Exports;
 
-use App\Models\DailyKpiOperator;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class OperatorKpiExport implements FromCollection, WithHeadings
+class OperatorKpiExport implements FromCollection, WithHeadings, WithStyles
 {
-    protected string $date;
+    protected string $startDate;
+    protected string $endDate;
+    protected ?string $operatorCode;
 
-    public function __construct(string $date)
+    public function __construct(string $startDate, string $endDate, ?string $operatorCode = null)
     {
-        $this->date = $date;
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+        $this->operatorCode = $operatorCode;
     }
 
     public function collection()
     {
-        return \App\Models\ProductionLog::with(['machine', 'item'])
-            ->where('production_date', $this->date)
+        $query = \App\Models\ProductionLog::with(['machine', 'item'])
+            ->whereBetween('production_date', [$this->startDate, $this->endDate]);
+
+        if ($this->operatorCode && $this->operatorCode !== 'all') {
+            $query->where('operator_code', $this->operatorCode);
+        }
+
+        return $query
+            ->orderBy('production_date')
             ->orderBy('shift')
             ->orderBy('operator_code')
+            ->orderBy('time_start')
             ->get()
             ->map(function ($row) {
                 // Determine operator name
@@ -33,9 +46,10 @@ class OperatorKpiExport implements FromCollection, WithHeadings
                 }
 
                 return [
+                    'tanggal' => $row->production_date,
                     'shift' => $row->shift,
                     'operator' => $opName,
-                    'machine' => $row->machine_code, // Keep code as requested for machine
+                    'machine' => $row->machine_code,
                     'item' => $itemName,
                     'time_start' => $row->time_start,
                     'time_end' => $row->time_end,
@@ -49,6 +63,7 @@ class OperatorKpiExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
+            'Tanggal',
             'SF',
             'Operator',
             'Mesin',
@@ -57,7 +72,15 @@ class OperatorKpiExport implements FromCollection, WithHeadings
             'Waktu Selesai',
             'Target',
             'Aktual',
-            'KPI',
+            'KPI (%)',
+        ];
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        // Bold the header row
+        return [
+            1 => ['font' => ['bold' => true]],
         ];
     }
 }

@@ -132,12 +132,7 @@ class TrackingOperatorController extends Controller
             return redirect()->back()->with('error', 'Untuk export > 1 hari, WAJIB pilih operator.');
         }
 
-        // Query Data Source (ProductionLog or DailyKpiOperator?)
-        // The original exportPdf used ProductionLog to show detailed rows.
-        // If we are generating a report for a range, maybe we want summary? 
-        // User said "generate data operator 0942 from 1-31 Jan". Usually implies detailed logs OR summary list.
-        // Given the original PDF was detailed rows, let's keep it detailed but filtered.
-
+        // ─── Detail baris produksi ───────────────────────────────────────────
         $query = ProductionLog::with(['machine', 'item', 'operator']);
         $query->whereBetween('production_date', [$startDate, $endDate]);
 
@@ -153,11 +148,49 @@ class TrackingOperatorController extends Controller
 
         $operatorNames = MdOperatorMirror::pluck('name', 'code');
 
-        // We might need a slightly different view or pass range info
+        // ─── KPI harian per tanggal (dari tabel daily_kpi_operator) ──────────
+        // Digunakan untuk menampilkan "Rata2 Harian" pada tiap baris
+        $dailyKpiQuery = DailyKpiOperator::whereBetween('kpi_date', [$startDate, $endDate]);
+        if ($operatorCode && $operatorCode !== 'all') {
+            $dailyKpiQuery->where('operator_code', $operatorCode);
+        }
+        // Map: date -> kpi_percent
+        $dailyKpiMap = $dailyKpiQuery->get()->keyBy('kpi_date');
+
+        // ─── Ringkasan performa (summary) ────────────────────────────────────
+        $daysAbove = 0;   // hari KPI >= 85%
+        $daysBelow = 0;   // hari KPI < 85%
+        $kpiSum = 0;
+        $dayCount = $dailyKpiMap->count();
+
+        foreach ($dailyKpiMap as $d) {
+            $kpiSum += $d->kpi_percent;
+            if ($d->kpi_percent >= 85) {
+                $daysAbove++;
+            } else {
+                $daysBelow++;
+            }
+        }
+
+        $overallAvg = $dayCount > 0 ? round($kpiSum / $dayCount, 2) : 0;
+        $pctAbove = $dayCount > 0 ? round(($daysAbove / $dayCount) * 100, 1) : 0;
+        $pctBelow = $dayCount > 0 ? round(($daysBelow / $dayCount) * 100, 1) : 0;
+
+        $summaryData = [
+            'day_count' => $dayCount,
+            'days_above' => $daysAbove,
+            'days_below' => $daysBelow,
+            'pct_above' => $pctAbove,
+            'pct_below' => $pctBelow,
+            'overall_avg' => $overallAvg,
+        ];
+
         $pdf = Pdf::loadView('tracking.operator.pdf', [
             'rows' => $rows,
             'operatorNames' => $operatorNames,
-            'date' => ($startDate === $endDate) ? $startDate : "$startDate - $endDate", // Label
+            'date' => ($startDate === $endDate) ? $startDate : "$startDate - $endDate",
+            'dailyKpiMap' => $dailyKpiMap,
+            'summaryData' => $summaryData,
         ]);
 
         $pdf->setPaper('A4', 'landscape');

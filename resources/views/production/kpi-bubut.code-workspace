@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../../.."
+		},
+		{
+			"path": "../../../../masterdataKPI"
+		},
+		{
+			"path": "../../../../kpi-netto"
+		}
+	],
+	"settings": {}
+}
