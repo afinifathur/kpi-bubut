@@ -34,7 +34,12 @@ class DepartmentScope implements Scope
                 // Only Direktur and MR see everything by default.
                 // Others (Admin Dept, HR, Guest) are restricted to their own branch by default.
                 if (!in_array($user->role, ['direktur', 'mr'])) {
-                    $builder->where('department_code', 'LIKE', $user->department_code . '%');
+                    if (!empty($user->department_code)) {
+                        $builder->where('department_code', 'LIKE', $user->department_code . '%');
+                    } else {
+                        // SAFETY: department_code kosong = tampilkan 0 data (bukan semua data)
+                        $builder->whereRaw('1 = 0');
+                    }
                 }
 
                 return;
@@ -105,7 +110,12 @@ class DepartmentScope implements Scope
 
             // 5. Default / Kabag / Read-only: Hierarchical sub-department matching
             // Using LIKE allows 404 to see 404.1, 404.2, etc.
-            $builder->where('department_code', 'LIKE', $user->department_code . '%');
+            if (!empty($user->department_code)) {
+                $builder->where('department_code', 'LIKE', $user->department_code . '%');
+            } else {
+                // SAFETY: department_code kosong = tampilkan 0 data (bukan semua data)
+                $builder->whereRaw('1 = 0');
+            }
         }
     }
 }
