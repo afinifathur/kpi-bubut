@@ -105,6 +105,7 @@ class DailyReportController extends Controller
             'operator' => 'operator_code',
             'machine' => 'machine_code',
             'work_hours' => 'work_hours',
+            'cycle_time' => 'cycle_time_used_sec',
             'target' => 'target_qty',
             'actual' => 'actual_qty',
             'kpi' => 'achievement_percent',

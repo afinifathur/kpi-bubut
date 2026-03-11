@@ -53,6 +53,9 @@ cd /srv/docker/apps/kpi-bubut
 # Pull kode terbaru
 sudo git pull origin main
 
+# Rebuild dan restart container (WAJIB agar perubahan PHP terbaca)
+sudo docker compose up --build -d
+
 # Clear semua cache
 sudo docker compose exec app php artisan config:clear
 sudo docker compose exec app php artisan view:clear

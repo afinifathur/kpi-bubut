@@ -180,6 +180,14 @@
                         {{ number_format($row->work_hours, 2) }} Jam
                         <br><small>{{ \Carbon\Carbon::parse($row->time_start)->format('H:i') }} -
                             {{ \Carbon\Carbon::parse($row->time_end)->format('H:i') }}</small>
+                        <div style="margin-top: 2px;">
+                            <span style="font-size: 7.5pt; color: #888;">Cycle Time</span><br>
+                            @php
+                                $ctMins = floor($row->cycle_time_used_sec / 60);
+                                $ctSecs = $row->cycle_time_used_sec % 60;
+                            @endphp
+                            <span style="font-size: 8.5pt;">{{ $ctMins }}m {{ $ctSecs }}s</span>
+                        </div>
                     </td>
                     <td class="col-num">{{ $row->target_qty }}</td>
                     <td class="col-num">{{ $row->actual_qty }}</td>

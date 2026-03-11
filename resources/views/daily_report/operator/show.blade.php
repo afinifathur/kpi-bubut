@@ -146,6 +146,16 @@
                             </a>
                         </th>
 
+                        {{-- Cycle Time - Sortable --}}
+                        <th class="px-4 py-3 text-right">
+                            <a href="{{ getSortUrl('cycle_time', $currentSort, $currentDirection, $date) }}"
+                                class="flex items-center justify-end gap-1 hover:text-blue-600 transition-colors {{ isSorted('cycle_time', $currentSort) ? 'text-blue-600 font-bold' : '' }}">
+                                Cycle Time
+                                <span
+                                    class="text-xs">{{ getSortArrow('cycle_time', $currentSort, $currentDirection) }}</span>
+                            </a>
+                        </th>
+
                         {{-- Target - Sortable --}}
                         <th class="px-4 py-3 text-right">
                             <a href="{{ getSortUrl('target', $currentSort, $currentDirection, $date) }}"
@@ -210,6 +220,13 @@
                                     {{ \Carbon\Carbon::parse($row->time_end)->format('H:i') }}
                                 </div>
                             </td>
+                            <td class="px-4 py-4 text-right font-mono text-gray-600">
+                                @php
+                                    $ctMins = floor($row->cycle_time_used_sec / 60);
+                                    $ctSecs = $row->cycle_time_used_sec % 60;
+                                @endphp
+                                {{ $ctMins }}m {{ $ctSecs }}s
+                            </td>
                             <td class="px-4 py-4 text-right text-gray-600">
                                 {{ $row->target_qty }}
                             </td>
@@ -263,7 +280,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-6 py-10 text-center text-gray-500 italic bg-gray-50">
+                            <td colspan="10" class="px-6 py-10 text-center text-gray-500 italic bg-gray-50">
                                 Data tidak ditemukan untuk tanggal ini
                             </td>
                         </tr>

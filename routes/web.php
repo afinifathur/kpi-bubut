@@ -123,6 +123,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])
                 ->name('show');
         });
+
+        Route::prefix('cycle-time')->name('cycle_time.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\TrackingCycleTimeController::class, 'index'])
+                ->name('index');
+
+            Route::get('/pdf', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportPdf'])
+                ->name('pdf');
+
+            Route::get('/excel', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportExcel'])
+                ->name('excel');
+        });
     });
 
     /*
