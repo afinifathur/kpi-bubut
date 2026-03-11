@@ -76,7 +76,7 @@ class PullMasterItemsAndOperators extends Command
                 continue;
             }
 
-            MdOperatorMirror::updateOrCreate(
+            MdOperatorMirror::withoutGlobalScopes()->updateOrCreate(
                 ['code' => $op->code],
                 [
                     'name'             => $op->name,

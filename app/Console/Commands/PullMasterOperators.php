@@ -21,13 +21,13 @@ class PullMasterOperators extends Command
         $count = 0;
 
         foreach ($operators as $op) {
-            $mirror = MdOperatorMirror::where('code', $op->code)->first();
+            $mirror = MdOperatorMirror::withoutGlobalScopes()->where('code', $op->code)->first();
 
             if ($mirror && $mirror->source_updated_at && \Carbon\Carbon::parse($mirror->source_updated_at)->equalTo(\Carbon\Carbon::parse($op->updated_at))) {
                 continue;
             }
 
-            MdOperatorMirror::updateOrCreate(
+            MdOperatorMirror::withoutGlobalScopes()->updateOrCreate(
                 ['code' => $op->code],
                 [
                     'name' => $op->name,

@@ -38,7 +38,7 @@ class PullMasterMachines extends Command
 
             $runtimeStatus = $this->computeRuntimeStatus($m->last_seen_at);
 
-            MdMachineMirror::updateOrCreate(
+            MdMachineMirror::withoutGlobalScopes()->updateOrCreate(
                 ['code' => $m->code],
                 [
                     'name' => $m->name,
