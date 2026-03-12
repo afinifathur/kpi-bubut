@@ -90,41 +90,56 @@
 <body>
 
     <div class="header">
-        <h2>Laporan Downtime Harian</h2>
-        <p>Tanggal: {{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
+        <h2>Laporan Harian Mesin (Downtime & Cek Harian)</h2>
+        <p>Range: {{ $date }}</p>
     </div>
 
     <table>
         <thead>
             <tr>
                 <th style="width: 5%">No</th>
+                <th style="width: 15%">Tanggal / Jam</th>
                 <th style="width: 15%">Mesin</th>
-                <th style="width: 20%">Operator</th>
+                <th style="width: 10%">Tipe</th>
+                <th style="width: 45%">Detail / Masalah / Spek</th>
                 <th style="width: 10%">Durasi</th>
-                <th style="width: 50%">Catatan Masalah</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($list as $index => $row)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td>
+                    <td class="text-xs">
+                        {{ \Carbon\Carbon::parse($row->downtime_date)->format('d/m/y') }}
+                        @if($row->start_time)
+                            <br><small>{{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}</small>
+                        @endif
+                    </td>
+                    <td class="text-center">
                         {{ $row->machine->name ?? $row->machine_code }}
+                        <br><small>({{ $row->machine_code }})</small>
+                    </td>
+                    <td class="text-center">
+                        {{ $row->entry_type === 'check' ? 'CHECK' : 'DOWNTIME' }}
                     </td>
                     <td>
-                        {{ $row->operator->name ?? $row->operator_code }}
+                        @if($row->entry_type === 'check')
+                            <strong>{{ $row->size_category }} - {{ strtoupper($row->rpm_feeding_mode) }}</strong><br>
+                            RPM: {{ $row->rpm_value }} | Feeding: {{ $row->feeding_value }}<br>
+                            Cek: {{ $row->check_cekam }}/{{ $row->check_air_ozo }}/{{ $row->check_eretan }}/{{ $row->check_pisau }}/{{ $row->check_kebersihan }}/{{ $row->check_oli }}
+                        @else
+                            <strong>{{ $row->reason }}</strong><br>
+                            {{ $row->note ?? '-' }}
+                        @endif
                     </td>
-                    <td class="text-right" style="font-weight: bold;">
-                        {{ $row->duration_minutes }} Min
-                    </td>
-                    <td>
-                        {{ $row->note }}
+                    <td class="text-right">
+                        {{ $row->entry_type === 'downtime' ? $row->duration_minutes . 'm' : '-' }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center">
-                        Tidak ada data downtime untuk tanggal ini.
+                    <td colspan="6" class="text-center">
+                        Tidak ada data untuk periode ini.
                     </td>
                 </tr>
             @endforelse

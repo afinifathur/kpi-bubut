@@ -76,10 +76,13 @@ class TrackingDowntimeController extends Controller
          */
         $machineNames = MdMachineMirror::pluck('name', 'code');
 
+        $totalMinutes = $summary->sum('total_minutes');
+
         return view('downtime.index', [
             'list' => $list,
             'summary' => $summary,
             'machineNames' => $machineNames,
+            'totalMinutes' => $totalMinutes,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'selectedMachine' => $machineCode,

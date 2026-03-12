@@ -37,72 +37,97 @@ class DowntimeController extends Controller
         if (auth()->user()->isReadOnly()) {
             return redirect()->back()->with('error', 'Anda tidak memiliki hak akses (Read-Only).');
         }
+
+        $entryType = $request->input('entry_type', 'downtime');
+
         /**
-         * 1. VALIDASI INPUT DASAR
-         * Server = Source of Truth
+         * 1. VALIDASI INPUT BERDASARKAN TIPE
          */
-        $validated = $request->validate([
+        $rules = [
+            'entry_type' => 'required|in:downtime,check',
             'downtime_date' => 'required|date',
-            'shift' => 'required|string|max:10',
-
             'machine_code' => 'required|string',
-            'operator_code' => 'required|string',
-
-            'time_start' => 'required|date_format:H:i',
-            'time_end' => 'required|date_format:H:i|after:time_start',
-
-            'reason' => 'required|string|max:255',
             'note' => 'nullable|string|max:255',
-        ]);
+        ];
+
+        if ($entryType === 'downtime') {
+            $rules += [
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+                'reason' => 'required|string|max:255',
+            ];
+        } else {
+            $rules += [
+                'size_category' => 'required|string',
+                'rpm_feeding_mode' => 'required|in:kasar,finish',
+                'check_cekam' => 'required|in:Ya,Tidak',
+                'check_air_ozo' => 'required|in:Ya,Tidak',
+                'check_eretan' => 'required|in:Ya,Tidak',
+                'check_pisau' => 'required|in:Ya,Tidak',
+                'check_kebersihan' => 'required|in:Ya,Tidak',
+                'check_oli' => 'required|in:Ya,Tidak',
+                'rpm_value' => 'required|integer',
+                'feeding_value' => 'required|numeric',
+            ];
+        }
+
+        $validated = $request->validate($rules);
 
         /**
          * 2. LOAD MASTER MIRROR (FAIL FAST)
-         * Defensive Availability Layer
          */
         $machine = MdMachineMirror::where('code', $validated['machine_code'])
             ->where('status', 'active')
             ->firstOrFail();
 
-        $operator = MdOperatorMirror::where('code', $validated['operator_code'])
-            ->where('status', 'active')
-            ->firstOrFail();
-
         /**
-         * 3. HITUNG DURASI DOWNTIME (MENIT)
+         * 3. DATA PREPARATION
          */
-        $start = strtotime($validated['time_start']);
-        $end = strtotime($validated['time_end']);
+        $data = [
+            'entry_type' => $entryType,
+            'department_code' => $machine->department_code, // Use machine's dept
+            'downtime_date' => $validated['downtime_date'],
+            'machine_code' => $this->normalizeCode($machine->code),
+            'note' => $validated['note'] ?? null,
+        ];
 
-        $durationMinutes = (int) round(($end - $start) / 60);
+        if ($entryType === 'downtime') {
+            $start = strtotime($validated['start_time']);
+            $end = strtotime($validated['end_time']);
+            $durationMinutes = (int) round(($end - $start) / 60);
 
-        if ($durationMinutes <= 0) {
-            return back()
-                ->withErrors(['time_end' => 'Durasi downtime tidak valid.'])
-                ->withInput();
+            $data += [
+                'start_time' => $validated['start_time'],
+                'end_time' => $validated['end_time'],
+                'duration_minutes' => $durationMinutes,
+                'reason' => $validated['reason'],
+            ];
+        } else {
+            $data += [
+                'size_category' => $validated['size_category'],
+                'rpm_feeding_mode' => $validated['rpm_feeding_mode'],
+                'check_cekam' => $validated['check_cekam'],
+                'check_air_ozo' => $validated['check_air_ozo'],
+                'check_eretan' => $validated['check_eretan'],
+                'check_pisau' => $validated['check_pisau'],
+                'check_kebersihan' => $validated['check_kebersihan'],
+                'check_oli' => $validated['check_oli'],
+                'rpm_value' => $validated['rpm_value'],
+                'feeding_value' => $validated['feeding_value'],
+                'duration_minutes' => 0, // Daily check doesn't have "duration" in the same sense
+            ];
         }
 
         /**
-         * 4. SIMPAN KE FACT TABLE (SNAPSHOT)
-         * NO FK — KPI IMMUTABLE
+         * 4. SIMPAN KE FACT TABLE
          */
-        DowntimeLog::create([
-            'downtime_date' => $validated['downtime_date'],
-            'shift' => $validated['shift'],
+        DowntimeLog::create($data);
 
-            'machine_code' => $this->normalizeCode($machine->code),
-            'operator_code' => $this->normalizeCode($operator->code),
-
-            'time_start' => $validated['time_start'],
-            'time_end' => $validated['time_end'],
-            'duration_minutes' => $durationMinutes,
-
-            'reason' => $validated['reason'],
-            'note' => $validated['note'] ?? null,
-        ]);
+        $msg = $entryType === 'downtime' ? 'Data Downtime' : 'Laporan Pengecekan Harian';
 
         return redirect()
             ->back()
-            ->with('success', "Downtime a.n. {$operator->name} berhasil disimpan.");
+            ->with('success', "{$msg} Mesin {$machine->name} berhasil disimpan.");
     }
 
     /**

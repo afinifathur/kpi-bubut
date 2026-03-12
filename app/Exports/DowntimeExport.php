@@ -19,24 +19,63 @@ class DowntimeExport implements FromCollection, WithHeadings
     {
         return DowntimeLog::whereDate('downtime_date', $this->date)
             ->select(
-                'downtime_date',
                 'machine_code',
-                'operator_code',
+                'entry_type',
                 'duration_minutes',
+                'reason',
+                'size_category',
+                'rpm_feeding_mode',
+                'rpm_value',
+                'feeding_value',
+                'check_cekam',
+                'check_air_ozo',
+                'check_eretan',
+                'check_pisau',
+                'check_kebersihan',
+                'check_oli',
                 'note'
             )
             ->orderBy('machine_code')
-            ->get();
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'machine' => strtoupper($row->machine_code),
+                    'tipe' => $row->entry_type === 'check' ? 'Cek Harian' : 'Downtime',
+                    'durasi' => $row->entry_type === 'downtime' ? $row->duration_minutes . ' min' : '-',
+                    'alasan' => $row->entry_type === 'downtime' ? $row->reason : '-',
+                    'cekam' => $row->entry_type === 'check' ? $row->check_cekam : '-',
+                    'ozon' => $row->entry_type === 'check' ? $row->check_air_ozo : '-',
+                    'eretan' => $row->entry_type === 'check' ? $row->check_eretan : '-',
+                    'pisau' => $row->entry_type === 'check' ? $row->check_pisau : '-',
+                    'bersih' => $row->entry_type === 'check' ? $row->check_kebersihan : '-',
+                    'oli' => $row->entry_type === 'check' ? $row->check_oli : '-',
+                    'size' => $row->entry_type === 'check' ? $row->size_category : '-',
+                    'mode' => $row->entry_type === 'check' ? ucfirst($row->rpm_feeding_mode) : '-',
+                    'rpm' => $row->entry_type === 'check' ? $row->rpm_value : '-',
+                    'feeding' => $row->entry_type === 'check' ? $row->feeding_value : '-',
+                    'catatan' => $row->note ?? '-',
+                ];
+            });
     }
 
     public function headings(): array
     {
         return [
-            'Tanggal',
-            'Machine',
-            'Operator',
-            'Durasi (Menit)',
-            'Keterangan',
+            'Mesin',
+            'Tipe',
+            'Durasi',
+            'Alasan/Masalah',
+            'CEKAM',
+            'OZON',
+            'ERETAN',
+            'PISAU',
+            'BERSIH',
+            'OLI',
+            'Size (Check)',
+            'Mode (Check)',
+            'RPM',
+            'Feeding',
+            'Catatan',
         ];
     }
 }

@@ -453,6 +453,114 @@ class DailyReportController extends Controller
 
         $pdf->setPaper('A4', 'portrait');
 
-        return $pdf->download("Laporan-Harian-Downtime-{$date}.pdf");
+        return $pdf->stream("Laporan-Harian-Downtime-{$date}.pdf");
+    }
+
+    /**
+     * EXPORT EXCEL (DOWNTIME)
+     */
+    public function downtimeExportExcel($date)
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\DowntimeExport($date), 
+            "Laporan-Harian-Downtime-{$date}.xlsx"
+        );
+    }
+
+    /**
+     * EDIT (FORM EDIT DOWNTIME/CHECK)
+     */
+    public function downtimeEdit($id)
+    {
+        if (auth()->user()->isReadOnly()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $log = \App\Models\DowntimeLog::with(['machine', 'operator'])->findOrFail($id);
+
+        if (\App\Services\DateLockService::isLocked($log->downtime_date)) {
+            abort(403, 'Data sudah dikunci. Tidak dapat mengedit.');
+        }
+
+        return view('daily_report.downtime.edit', [
+            'log' => $log,
+        ]);
+    }
+
+    /**
+     * UPDATE (SIMPAN EDIT DOWNTIME/CHECK)
+     */
+    public function downtimeUpdate(Request $request, $id)
+    {
+        if (auth()->user()->isReadOnly()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $log = \App\Models\DowntimeLog::findOrFail($id);
+
+        if (\App\Services\DateLockService::isLocked($log->downtime_date)) {
+            abort(403, 'Data sudah dikunci. Tidak dapat mengedit.');
+        }
+
+        $entryType = $log->entry_type;
+
+        $rules = [
+            'note' => 'nullable|string|max:255',
+        ];
+
+        if ($entryType === 'downtime') {
+            $rules += [
+                'start_time' => 'required|date',
+                'end_time' => 'required|date|after:start_time',
+                'reason' => 'required|string|max:255',
+            ];
+        } else {
+            $rules += [
+                'size_category' => 'required|string',
+                'rpm_feeding_mode' => 'required|in:kasar,finish',
+                'check_cekam' => 'required|in:Ya,Tidak',
+                'check_air_ozo' => 'required|in:Ya,Tidak',
+                'check_eretan' => 'required|in:Ya,Tidak',
+                'check_pisau' => 'required|in:Ya,Tidak',
+                'check_kebersihan' => 'required|in:Ya,Tidak',
+                'check_oli' => 'required|in:Ya,Tidak',
+                'rpm_value' => 'required|integer',
+                'feeding_value' => 'required|numeric',
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($entryType === 'downtime') {
+            $start = strtotime($validated['start_time']);
+            $end = strtotime($validated['end_time']);
+            $durationMinutes = (int) round(($end - $start) / 60);
+
+            $log->update([
+                'start_time' => $validated['start_time'],
+                'end_time' => $validated['end_time'],
+                'duration_minutes' => $durationMinutes,
+                'reason' => $validated['reason'],
+                'note' => $validated['note'] ?? null,
+            ]);
+        } else {
+            $log->update([
+                'size_category' => $validated['size_category'],
+                'rpm_feeding_mode' => $validated['rpm_feeding_mode'],
+                'check_cekam' => $validated['check_cekam'],
+                'check_air_ozo' => $validated['check_air_ozo'],
+                'check_eretan' => $validated['check_eretan'],
+                'check_pisau' => $validated['check_pisau'],
+                'check_kebersihan' => $validated['check_kebersihan'],
+                'check_oli' => $validated['check_oli'],
+                'rpm_value' => $validated['rpm_value'],
+                'feeding_value' => $validated['feeding_value'],
+                'note' => $validated['note'] ?? null,
+            ]);
+        }
+
+        return redirect()
+            ->route('daily_report.downtime.show', $log->downtime_date)
+            ->with('success', "Data " . ($entryType === 'check' ? 'Pengecekan' : 'Downtime') . " berhasil diperbarui.");
     }
 }

@@ -13,11 +13,27 @@ class DowntimeLog extends Model
     protected $table = 'downtime_logs';
 
     protected $fillable = [
+        'entry_type',
         'department_code',
         'downtime_date',
+        'shift',
+        'tim',
         'operator_code',
         'machine_code',
+        'start_time',
+        'end_time',
         'duration_minutes',
+        'reason',
+        'size_category',
+        'check_cekam',
+        'check_air_ozo',
+        'check_eretan',
+        'check_pisau',
+        'check_kebersihan',
+        'check_oli',
+        'rpm_value',
+        'feeding_value',
+        'rpm_feeding_mode',
         'note',
     ];
 
