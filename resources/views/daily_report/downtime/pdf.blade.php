@@ -158,8 +158,42 @@
                     </td>
                     <td class="text-right">
                         @if($row->entry_type === 'check')
-                            <div>RPM: <span class="font-bold">{{ $row->rpm_value }}</span></div>
-                            <div>Feed: <span class="font-bold">{{ $row->feeding_value }}</span></div>
+                            @php
+                                $standards = [
+                                    '1-1/4" - 2"' => [
+                                        'kasar' => ['rpm' => 300, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 380, 'feeding' => 0.2]
+                                    ],
+                                    '2" - 2-1/2"' => [
+                                        'kasar' => ['rpm' => 300, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 350, 'feeding' => 0.2]
+                                    ],
+                                    '3" - 4"' => [
+                                        'kasar' => ['rpm' => 250, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 320, 'feeding' => 0.2]
+                                    ],
+                                    '5" - 6"' => [
+                                        'kasar' => ['rpm' => 220, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 260, 'feeding' => 0.2]
+                                    ]
+                                ];
+
+                                $std = $standards[$row->size_category][$row->rpm_feeding_mode] ?? null;
+                                
+                                if (!function_exists('getPdfColor')) {
+                                    function getPdfColor($input, $std) {
+                                        if (!$input || !$std) return '#64748b'; // slate-500
+                                        $val = (float) $input;
+                                        $diff = abs($val - $std) / $std;
+                                        return $diff > 0.2 ? '#dc2626' : '#059669'; // red-600 vs emerald-600
+                                    }
+                                }
+
+                                $rpmColor = getPdfColor($row->rpm_value, $std['rpm'] ?? null);
+                                $feedColor = getPdfColor($row->feeding_value, $std['feeding'] ?? null);
+                            @endphp
+                            <div>RPM: <span class="font-bold" style="color: {{ $rpmColor }};">{{ $row->rpm_value }}</span></div>
+                            <div>Feed: <span class="font-bold" style="color: {{ $feedColor }};">{{ $row->feeding_value }}</span></div>
                         @else
                             <div class="font-bold" style="color: #dc2626; font-size: 10pt;">{{ $row->duration_minutes }} <span style="font-size: 7pt;">min</span></div>
                         @endif
