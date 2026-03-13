@@ -57,6 +57,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function canManageHrReports(): bool
+    {
+        return in_array($this->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com']);
+    }
+
     public function isReadOnly(): bool
     {
         if (in_array($this->email, ['adminhr@peroniks.com', 'managerhr@peroniks.com'])) {

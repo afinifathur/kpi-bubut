@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\RejectController;
@@ -48,12 +47,8 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('production')->name('production.')->group(function () {
-
-        Route::get('/create', [ProductionController::class, 'create'])
-            ->name('create');
-
-        Route::post('/store', [ProductionController::class, 'store'])
-            ->name('store');
+        Route::get('/create', [ProductionController::class, 'create'])->name('create');
+        Route::post('/store', [ProductionController::class, 'store'])->name('store');
     });
 
     /*
@@ -62,15 +57,9 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('reject')->name('reject.')->group(function () {
-
-        Route::get('/', [RejectController::class, 'index'])
-            ->name('index');
-
-        Route::get('/create', [RejectController::class, 'create'])
-            ->name('create');
-
-        Route::post('/store', [RejectController::class, 'store'])
-            ->name('store');
+        Route::get('/', [RejectController::class, 'index'])->name('index');
+        Route::get('/create', [RejectController::class, 'create'])->name('create');
+        Route::post('/store', [RejectController::class, 'store'])->name('store');
     });
 
     /*
@@ -79,18 +68,10 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('downtime')->name('downtime.')->group(function () {
-
-        Route::get('/create', [DowntimeController::class, 'create'])
-            ->name('create');
-
-        Route::post('/store', [DowntimeController::class, 'store'])
-            ->name('store');
-
-        Route::get('/', [TrackingDowntimeController::class, 'index'])
-            ->name('tracking');
-
-        Route::get('/tracking/pdf', [TrackingDowntimeController::class, 'exportPdf'])
-            ->name('tracking.pdf');
+        Route::get('/create', [DowntimeController::class, 'create'])->name('create');
+        Route::post('/store', [DowntimeController::class, 'store'])->name('store');
+        Route::get('/', [TrackingDowntimeController::class, 'index'])->name('tracking');
+        Route::get('/tracking/pdf', [TrackingDowntimeController::class, 'exportPdf'])->name('tracking.pdf');
     });
 
     /*
@@ -99,40 +80,20 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('tracking')->name('tracking.')->group(function () {
-
         Route::prefix('operator')->name('operator.')->group(function () {
-
-            Route::get('/', [TrackingOperatorController::class, 'index'])
-                ->name('index');
-
-            Route::get('/pdf', [TrackingOperatorController::class, 'exportPdf'])
-                ->name('pdf');
-
-            Route::get('/{operator}/{date}', [TrackingOperatorController::class, 'show'])
-                ->name('show');
+            Route::get('/', [TrackingOperatorController::class, 'index'])->name('index');
+            Route::get('/pdf', [TrackingOperatorController::class, 'exportPdf'])->name('pdf');
+            Route::get('/{operator}/{date}', [TrackingOperatorController::class, 'show'])->name('show');
         });
-
         Route::prefix('mesin')->name('mesin.')->group(function () {
-
-            Route::get('/', [TrackingMachineController::class, 'index'])
-                ->name('index');
-
-            Route::get('/pdf', [TrackingMachineController::class, 'exportPdf'])
-                ->name('pdf');
-
-            Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])
-                ->name('show');
+            Route::get('/', [TrackingMachineController::class, 'index'])->name('index');
+            Route::get('/pdf', [TrackingMachineController::class, 'exportPdf'])->name('pdf');
+            Route::get('/{machine}/{date}', [TrackingMachineController::class, 'show'])->name('show');
         });
-
         Route::prefix('cycle-time')->name('cycle_time.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\TrackingCycleTimeController::class, 'index'])
-                ->name('index');
-
-            Route::get('/pdf', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportPdf'])
-                ->name('pdf');
-
-            Route::get('/excel', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportExcel'])
-                ->name('excel');
+            Route::get('/', [\App\Http\Controllers\TrackingCycleTimeController::class, 'index'])->name('index');
+            Route::get('/pdf', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportPdf'])->name('pdf');
+            Route::get('/excel', [\App\Http\Controllers\TrackingCycleTimeController::class, 'exportExcel'])->name('excel');
         });
     });
 
@@ -142,7 +103,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('daily-report')->name('daily_report.')->group(function () {
-
         Route::prefix('operator')->name('operator.')->group(function () {
             Route::get('/', [\App\Http\Controllers\DailyReportController::class, 'operatorIndex'])->name('index');
             Route::get('/show/{date}', [\App\Http\Controllers\DailyReportController::class, 'operatorShow'])->name('show');
@@ -150,10 +110,8 @@ Route::middleware('auth')->group(function () {
             Route::put('/update/{id}', [\App\Http\Controllers\DailyReportController::class, 'operatorUpdate'])->name('update');
             Route::delete('/destroy/{id}', [\App\Http\Controllers\DailyReportController::class, 'operatorDestroy'])->name('destroy');
             Route::get('/pdf/{date}', [\App\Http\Controllers\DailyReportController::class, 'operatorExportPdf'])->name('pdf');
-            // Locking
             Route::post('/toggle-lock', [\App\Http\Controllers\DailyReportController::class, 'toggleLock'])->name('toggle_lock');
         });
-
         Route::prefix('downtime')->name('downtime.')->group(function () {
             Route::get('/', [\App\Http\Controllers\DailyReportController::class, 'downtimeIndex'])->name('index');
             Route::get('/show/{date}', [\App\Http\Controllers\DailyReportController::class, 'downtimeShow'])->name('show');
@@ -162,10 +120,24 @@ Route::middleware('auth')->group(function () {
             Route::get('/excel/{date}', [\App\Http\Controllers\DailyReportController::class, 'downtimeExportExcel'])->name('excel');
             Route::get('/edit/{id}', [\App\Http\Controllers\DailyReportController::class, 'downtimeEdit'])->name('edit');
             Route::put('/update/{id}', [\App\Http\Controllers\DailyReportController::class, 'downtimeUpdate'])->name('update');
-            // Re-use lock toggle as it is date-based
             Route::post('/toggle-lock', [\App\Http\Controllers\DailyReportController::class, 'toggleLock'])->name('toggle_lock');
         });
+    });
 
+    /*
+    |--------------------------------------------------------------------------
+    | HR Report
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('hr-report')->name('hr_report.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\HrReportController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\HrReportController::class, 'create'])->name('create');
+        Route::post('/store', [\App\Http\Controllers\HrReportController::class, 'store'])->name('store');
+        Route::get('/{id}', [\App\Http\Controllers\HrReportController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\HrReportController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\HrReportController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\HrReportController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/pdf', [\App\Http\Controllers\HrReportController::class, 'exportPdf'])->name('pdf');
     });
 
     /*
@@ -174,15 +146,9 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::prefix('export')->name('export.')->group(function () {
-
-        Route::get('/operator', [ExportController::class, 'operatorKpi'])
-            ->name('operator');
-
-        Route::get('/machine/{date}', [ExportController::class, 'machineKpi'])
-            ->name('machine');
-
-        Route::get('/downtime/{date}', [ExportController::class, 'downtime'])
-            ->name('downtime');
+        Route::get('/operator', [\App\Http\Controllers\ExportController::class, 'operatorKpi'])->name('operator');
+        Route::get('/machine/{date}', [\App\Http\Controllers\ExportController::class, 'machineKpi'])->name('machine');
+        Route::get('/downtime/{date}', [\App\Http\Controllers\ExportController::class, 'downtime'])->name('downtime');
     });
 
     /*
@@ -190,8 +156,7 @@ Route::middleware('auth')->group(function () {
     | Audit Logs (MR & Direktur Only)
     |--------------------------------------------------------------------------
     */
-    Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])
-        ->name('audit_logs.index');
+    Route::get('/audit-logs', [\App\Http\Controllers\AuditLogController::class, 'index'])->name('audit_logs.index');
 
     /*
     |--------------------------------------------------------------------------
@@ -204,10 +169,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/search/machines', [\App\Http\Controllers\AutocompleteController::class, 'searchMachines'])->name('search.machines');
         Route::get('/search/heat-numbers', [\App\Http\Controllers\AutocompleteController::class, 'searchHeatNumbers'])->name('search.heat_numbers');
         Route::get('/item-stats/{code}', [\App\Http\Controllers\AutocompleteController::class, 'getItemStats'])->name('item.stats');
-
         Route::post('/sync', [\App\Http\Controllers\ManualSyncController::class, 'sync'])->name('manual.sync');
-
-        // Context Switcher
         Route::get('/context/departments', [\App\Http\Controllers\ContextSwitcherController::class, 'getDepartments'])->name('context.departments');
         Route::post('/context/set', [\App\Http\Controllers\ContextSwitcherController::class, 'setDepartment'])->name('context.set');
     });

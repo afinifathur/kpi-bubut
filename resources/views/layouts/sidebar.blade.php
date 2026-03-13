@@ -216,11 +216,19 @@
                 <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">HR</div>
             @endif
             <a href="{{ route('tracking.cycle_time.index') }}"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('tracking.cycle_time.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->is('tracking/cycle-time*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
                 <div class="w-6 flex justify-center">
                     <span class="material-icons-round text-xl">timer</span>
                 </div>
                 <span class="font-medium">Cycle Time Report</span>
+            </a>
+
+            <a href="{{ route('hr_report.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('hr_report.*') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">report_problem</span>
+                </div>
+                <span class="font-medium">Report HR</span>
             </a>
         @endif
 
