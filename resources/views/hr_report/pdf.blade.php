@@ -153,13 +153,13 @@
         <tr>
             <td>
                 Dibuat Oleh,<br><br><br>
-                ( Management Representative )<br>
-                HR
+                ( ....................... )<br>
+                Admin HR
             </td>
             <td>
                 Diperiksa Oleh,<br><br><br>
                 ( ....................... )<br>
-                SPV / Manager
+                Manager
             </td>
         </tr>
     </table>

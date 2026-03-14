@@ -176,21 +176,7 @@
                 </div>
             </div>
 
-            <!-- PDF Style Signature Footer (Minimalist) -->
-            <div class="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-8 px-8">
-                <div class="text-center md:text-left">
-                    <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-16">Dibuat Oleh</p>
-                    <p class="text-sm font-bold text-gray-800">Management Representative</p>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">HR</p>
-                </div>
-                @if(auth()->user()->canManageHrReports())
-                    <div class="text-center md:text-right">
-                        <p class="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-16">Diperiksa Oleh</p>
-                        <p class="text-sm font-bold text-gray-400">.......................</p>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">SPV / Manager</p>
-                    </div>
-                @endif
-            </div>
+
             
             <div class="text-center py-8">
                 <p class="text-[10px] text-gray-300 font-mono tracking-widest uppercase">KPI-Bubut Internal Tracking System • {{ date('Y') }}</p>
