@@ -145,11 +145,13 @@
                     <select name="reject_reason" required
                         class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 text-sm p-3">
                         <option value="" disabled selected>Pilih Jenis Kerusakan</option>
-                        <option value="Ukuran Tidak Sesuai">Ukuran Tidak Sesuai</option>
-                        <option value="Permukaan Kasar">Permukaan Kasar</option>
-                        <option value="Retak/Pecah">Retak/Pecah</option>
-                        <option value="Material Cacat">Material Cacat</option>
-                        <option value="Lainnya">Lainnya</option>
+                        <option value="Rusak ID Blong">Rusak ID Blong</option>
+                        <option value="Rusak OD Blong">Rusak OD Blong</option>
+                        <option value="Rusak Samping Blong">Rusak Samping Blong</option>
+                        <option value="Rusak RF Blong">Rusak RF Blong</option>
+                        <option value="Rusak Drat">Rusak Drat</option>
+                        <option value="Rusak Bubut">Rusak Bubut</option>
+                        <option value="Rusak Setting">Rusak Setting</option>
                     </select>
                 </div>
 

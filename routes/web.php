@@ -122,6 +122,12 @@ Route::middleware('auth')->group(function () {
             Route::put('/update/{id}', [\App\Http\Controllers\DailyReportController::class, 'downtimeUpdate'])->name('update');
             Route::post('/toggle-lock', [\App\Http\Controllers\DailyReportController::class, 'toggleLock'])->name('toggle_lock');
         });
+        Route::prefix('reject')->name('reject.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DailyReportController::class, 'rejectIndex'])->name('index');
+            Route::get('/show/{date}', [\App\Http\Controllers\DailyReportController::class, 'rejectShow'])->name('show');
+            Route::delete('/destroy/{id}', [\App\Http\Controllers\DailyReportController::class, 'rejectDestroy'])->name('destroy');
+            Route::get('/pdf/{date}', [\App\Http\Controllers\DailyReportController::class, 'rejectExportPdf'])->name('pdf');
+        });
     });
 
     /*

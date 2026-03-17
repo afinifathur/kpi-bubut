@@ -296,6 +296,14 @@
                 ],
 
                 standards: {
+                    '1/2" - 3/4"': {
+                        'kasar': { rpm: 380, feeding: 0.17 },
+                        'finish': { rpm: 450, feeding: 0.2 }
+                    },
+                    '1"': {
+                        'kasar': { rpm: 350, feeding: 0.17 },
+                        'finish': { rpm: 450, feeding: 0.2 }
+                    },
                     '1-1/4" - 2"': {
                         'kasar': { rpm: 300, feeding: 0.17 },
                         'finish': { rpm: 380, feeding: 0.2 }
@@ -311,6 +319,10 @@
                     '5" - 6"': {
                         'kasar': { rpm: 220, feeding: 0.17 },
                         'finish': { rpm: 260, feeding: 0.2 }
+                    },
+                    '8"': {
+                        'kasar': { rpm: 200, feeding: 0.16 },
+                        'finish': { rpm: 240, feeding: 0.2 }
                     }
                 },
 

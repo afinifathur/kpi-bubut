@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductionLog;
+use App\Models\RejectLog;
 use App\Models\MdOperatorMirror;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -562,5 +563,98 @@ class DailyReportController extends Controller
         return redirect()
             ->route('daily_report.downtime.show', $log->downtime_date)
             ->with('success', "Data " . ($entryType === 'check' ? 'Pengecekan' : 'Downtime') . " berhasil diperbarui.");
+    }
+
+    /**
+     * ===============================
+     * REJECT REPORT SECTION
+     * ===============================
+     */
+
+    /**
+     * INDEX (LIST TANGGAL REJECT)
+     */
+    public function rejectIndex()
+    {
+        $dates = RejectLog::selectRaw('
+                reject_date, 
+                SUM(reject_qty) as total_qty, 
+                COUNT(*) as total_logs
+            ')
+            ->groupBy('reject_date')
+            ->orderBy('reject_date', 'desc')
+            ->get();
+
+        // Calculate lock status
+        $dates->transform(function ($item) {
+            $item->is_locked = \App\Services\DateLockService::isLocked($item->reject_date);
+            return $item;
+        });
+
+        return view('daily_report.reject.index', [
+            'dates' => $dates,
+        ]);
+    }
+
+    /**
+     * SHOW (DETAIL HARIAN REJECT)
+     */
+    public function rejectShow($date)
+    {
+        $isLocked = \App\Services\DateLockService::isLocked($date);
+
+        $rows = RejectLog::with(['machine', 'operator', 'item'])
+            ->where('reject_date', $date)
+            ->orderBy('machine_code')
+            ->get();
+
+        return view('daily_report.reject.show', [
+            'rows' => $rows,
+            'date' => $date,
+            'isLocked' => $isLocked
+        ]);
+    }
+
+    /**
+     * DESTROY (HAPUS DATA REJECT)
+     */
+    public function rejectDestroy($id)
+    {
+        if (auth()->user()->isReadOnly()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $log = RejectLog::findOrFail($id);
+
+        if (\App\Services\DateLockService::isLocked($log->reject_date)) {
+            abort(403, 'Date is locked. Cannot delete data.');
+        }
+
+        $info = "Reject Mesin {$log->machine_code} ({$log->reject_qty} pcs)";
+        $log->delete();
+
+        return redirect()
+            ->back()
+            ->with('success', "Data berhasil dihapus: $info");
+    }
+
+    /**
+     * EXPORT PDF (REJECT)
+     */
+    public function rejectExportPdf($date)
+    {
+        $rows = RejectLog::with(['machine', 'operator', 'item'])
+            ->where('reject_date', $date)
+            ->orderBy('machine_code')
+            ->get();
+
+        $pdf = Pdf::loadView('daily_report.reject.pdf', [
+            'rows' => $rows,
+            'date' => $date,
+        ]);
+
+        $pdf->setPaper('A4', 'portrait');
+
+        return $pdf->stream("Laporan-Harian-Reject-{$date}.pdf");
     }
 }
