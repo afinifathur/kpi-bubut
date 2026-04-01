@@ -82,23 +82,26 @@ docker exec kpi-bubut-db-1 mysqldump -u root -p[PASSWORD] kpi_bubut > ~/backup_b
 # 4. Pull code terbaru
 git pull origin main
 
-# 5. Masuk ke container PHP dan jalankan migrasi
+# 5. Rebuild dan restart container (WAJIB agar perubahan PHP terbaca)
+sudo docker compose up --build -d
+
+# 6. Masuk ke container PHP dan jalankan migrasi
 docker exec -it kpi-bubut-app-1 php artisan migrate
 
-# 6. Clear semua cache
+# 7. Clear semua cache
 docker exec -it kpi-bubut-app-1 php artisan config:clear
 docker exec -it kpi-bubut-app-1 php artisan cache:clear
 docker exec -it kpi-bubut-app-1 php artisan view:clear
 docker exec -it kpi-bubut-app-1 php artisan route:clear
 
-# 7. Jika ada perubahan di composer.json
+# 8. Jika ada perubahan di composer.json
 docker exec -it kpi-bubut-app-1 composer install --no-dev --optimize-autoloader
 
-# 8. Jika ada perubahan di package.json / vite
+# 9. Jika ada perubahan di package.json / vite
 docker exec -it kpi-bubut-app-1 npm install
 docker exec -it kpi-bubut-app-1 npm run build
 
-# 9. Test aplikasi di browser
+# 10. Test aplikasi di browser
 ```
 
 ### JIKA ERROR - Rollback
@@ -173,6 +176,7 @@ php artisan make:migration add_new_column_to_table
 - [ ] SSH ke server
 - [ ] Backup database di server (sebelum pull)
 - [ ] `git pull origin main`
+- [ ] `sudo docker compose up --build -d`
 - [ ] `php artisan migrate` (BUKAN migrate:fresh!)
 - [ ] Clear cache (config, cache, view, route)
 - [ ] Test aplikasi di browser

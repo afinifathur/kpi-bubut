@@ -10,6 +10,10 @@ RUN npm run build
 # Stage 2: Serve Application
 FROM php:8.2-apache
 
+# Set timezone
+ENV TZ=Asia/Jakarta
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git \

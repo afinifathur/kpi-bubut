@@ -57,7 +57,12 @@ $DetailedLogFile = "C:\laragon\www\kpi-bubut\scripts\sync_log_detail.txt"
 function Log-Message($level, $message) {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$level] $message"
-    Write-Host $logEntry -ForegroundColor (if ($level -eq "ERROR") { "Red" } elseif ($level -eq "SUCCESS") { "Green" } elseif ($level -eq "WARNING") { "Yellow" } else { "Cyan" })
+    $color = "Cyan"
+    if ($level -eq "ERROR") { $color = "Red" }
+    elseif ($level -eq "SUCCESS") { $color = "Green" }
+    elseif ($level -eq "WARNING") { $color = "Yellow" }
+
+    Write-Host $logEntry -ForegroundColor $color
     Add-Content -Path $DetailedLogFile -Value $logEntry
 }
 
