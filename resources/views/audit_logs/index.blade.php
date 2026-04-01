@@ -15,7 +15,7 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6 p-4">
         <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
             <div>
-                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tanggal</label>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Filter Tanggal (dd/mm/yyyy)</label>
                 <input type="date" name="date" value="{{ request('date') }}"
                        class="block w-full shadow-sm sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 py-2 px-3">
             </div>
@@ -27,7 +27,7 @@
                     <option value="LOGIN" {{ request('action') == 'LOGIN' ? 'selected' : '' }}>LOGIN</option>
                     <option value="CREATE" {{ request('action') == 'CREATE' ? 'selected' : '' }}>CREATE (Penambahan)</option>
                     <option value="DELETE" {{ request('action') == 'DELETE' ? 'selected' : '' }}>DELETE (Penghapusan)</option>
-                    {{-- <option value="UPDATE">UPDATE</option> --}}
+                    <option value="EDIT" {{ request('action') == 'EDIT' ? 'selected' : '' }}>EDIT (Perubahan)</option>
                 </select>
             </div>
 
@@ -82,7 +82,7 @@
                                     'LOGIN' => 'bg-blue-100 text-blue-800',
                                     'CREATE' => 'bg-green-100 text-green-800',
                                     'DELETE' => 'bg-red-100 text-red-800',
-                                    'UPDATE' => 'bg-orange-100 text-orange-800',
+                                    'UPDATE', 'EDIT' => 'bg-orange-100 text-orange-800',
                                     default => 'bg-gray-100 text-gray-800'
                                 };
                             @endphp
@@ -128,6 +128,24 @@
         function viewDetail(details, action, model) {
             // Mapping technical keys to human-readable Indonesian labels
             const keyMap = {
+                // Production Logs
+                'production_date': 'Tanggal Produksi',
+                'shift': 'Shift',
+                'operator_id': 'ID Operator',
+                'operator_code': 'Kode Operator',
+                'machine_id': 'ID Mesin',
+                'machine_code': 'Kode Mesin',
+                'item_code': 'Kode Item',
+                'time_start': 'Jam Mulai',
+                'time_end': 'Jam Selesai',
+                'work_hours': 'Work Hours',
+                'cycle_time_used_sec': 'Used CT (Sec)',
+                'target_qty': 'Target Qty',
+                'actual_qty': 'Actual Qty',
+                'achievement_percent': 'Achievement (%)',
+                'note': 'Catatan',
+                'remark': 'Keterangan',
+                
                 // Common
                 'id': 'ID',
                 'name': 'Nama',
@@ -136,59 +154,97 @@
                 'created_at': 'Waktu Dibuat',
                 'updated_at': 'Waktu Diupdate',
                 
-                // Production / Production Input
-                'production_date': 'Tanggal Produksi',
-                'item_name': 'Nama Item',
-                'item_code': 'Kode Item',
+                // Master / Others
                 'qty_pcs': 'Jumlah (PCS)',
                 'qty_kg': 'Jumlah (KG)',
                 'process': 'Proses',
                 'operator_name': 'Nama Operator',
-                'remark': 'Keterangan',
-                'shift': 'Shift',
-                'mesin': 'Mesin',
-                'target_pcs': 'Target (PCS)',
-                'target_kg': 'Target (KG)',
-                'category': 'Kategori',
-                'description': 'Deskripsi',
-
-                // Downtime
                 'reason': 'Alasan',
                 'duration': 'Durasi (Menit)',
                 'start_time': 'Waktu Mulai',
                 'end_time': 'Waktu Selesai',
-
-                // Reject
                 'reject_type': 'Jenis Reject',
                 'defra_pcs': 'Reject (PCS)',
                 'defra_kg': 'Reject (KG)',
             };
 
+            const isEdit = action === 'EDIT' || action === 'UPDATE';
+
             let tableHtml = `
                 <div class="text-left">
-                    <div class="mb-4 pb-2 border-b border-gray-100 italic text-gray-500 text-xs">
-                        Aksi: ${action} | Model: ${model}
+                    <div class="mb-4 pb-2 border-b border-gray-100 flex justify-between items-center">
+                        <div class="italic text-gray-500 text-[10px]">
+                            Model: <span class="font-bold text-gray-700">${model}</span>
+                        </div>
+                        <div class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            action === 'EDIT' || action === 'UPDATE' ? 'bg-orange-100 text-orange-800' :
+                            action === 'CREATE' ? 'bg-green-100 text-green-800' :
+                            action === 'DELETE' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                        }">
+                            ${action}
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-xs text-left border-collapse">
-                            <tbody>
             `;
 
-            for (const [key, value] of Object.entries(details)) {
-                const label = keyMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                let displayValue = value;
-
-                // Handle arrays or objects if any (pretty print)
-                if (typeof value === 'object' && value !== null) {
-                    displayValue = `<pre class="bg-gray-50 p-1 rounded font-mono text-[10px]">${JSON.stringify(value, null, 2)}</pre>`;
-                }
-
+            if (isEdit) {
                 tableHtml += `
-                    <tr class="border-b border-gray-50">
-                        <th class="py-2 pr-4 font-semibold text-gray-500 w-1/3 align-top whitespace-nowrap">${label}</th>
-                        <td class="py-2 text-gray-800 break-words">${displayValue ?? '-'}</td>
-                    </tr>
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-500 border-b border-gray-100">
+                                <th class="py-2 pr-4 font-bold w-1/3">Atribut</th>
+                                <th class="py-2 pr-4 font-bold w-1/3">Sebelum</th>
+                                <th class="py-2 font-bold w-1/3">Sesudah</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                 `;
+
+                for (const [key, value] of Object.entries(details)) {
+                    const label = keyMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    
+                    // Value can be the new-only format (string/object) or the diff format {old, new}
+                    const isDiffFormat = (typeof value === 'object' && value !== null && 'old' in value && 'new' in value);
+                    let oldValue = isDiffFormat ? value.old : '-';
+                    let newValue = isDiffFormat ? value.new : value;
+
+                    // Formatting functions
+                    const formatVal = (v) => {
+                        if (v === null || v === undefined) return '-';
+                        if (typeof v === 'object') return `<pre class="text-[9px] text-gray-500">${JSON.stringify(v, null, 2)}</pre>`;
+                        return v;
+                    };
+
+                    tableHtml += `
+                        <tr class="border-b border-gray-50 hover:bg-gray-50">
+                            <th class="py-2 pr-4 font-semibold text-gray-500 align-top whitespace-nowrap">${label}</th>
+                            <td class="py-2 pr-4 text-red-600 bg-red-50/50 line-through decoration-red-300 italic align-top">${formatVal(oldValue)}</td>
+                            <td class="py-2 text-green-700 bg-green-50/50 font-medium align-top">${formatVal(newValue)}</td>
+                        </tr>
+                    `;
+                }
+            } else {
+                tableHtml += `
+                    <table class="w-full text-xs text-left border-collapse">
+                        <tbody>
+                `;
+
+                for (const [key, value] of Object.entries(details)) {
+                    const label = keyMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    let displayValue = value;
+
+                    if (typeof value === 'object' && value !== null) {
+                        displayValue = `<pre class="bg-gray-50 p-1 rounded font-mono text-[10px]">${JSON.stringify(value, null, 2)}</pre>`;
+                    }
+
+                    tableHtml += `
+                        <tr class="border-b border-gray-50">
+                            <th class="py-2 pr-4 font-semibold text-gray-500 w-1/3 align-top whitespace-nowrap">${label}</th>
+                            <td class="py-2 text-gray-800 break-words">${displayValue ?? '-'}</td>
+                        </tr>
+                    `;
+                }
             }
 
             tableHtml += `

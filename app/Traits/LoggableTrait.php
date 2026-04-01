@@ -25,7 +25,14 @@ trait LoggableTrait
 
         static::updated(function ($model) {
             $changes = $model->getChanges();
-            static::logToAudit('UPDATE', $model, $changes);
+            $details = [];
+            foreach ($changes as $key => $newValue) {
+                $details[$key] = [
+                    'old' => $model->getOriginal($key),
+                    'new' => $newValue
+                ];
+            }
+            static::logToAudit('EDIT', $model, $details);
         });
 
     }
