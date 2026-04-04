@@ -155,7 +155,9 @@ class TrackingOperatorController extends Controller
             $dailyKpiQuery->where('operator_code', $operatorCode);
         }
         // Map: date -> kpi_percent
-        $dailyKpiMap = $dailyKpiQuery->get()->keyBy('kpi_date');
+        $dailyKpiMap = $dailyKpiQuery->get()->mapWithKeys(function ($item) {
+            return [$item->kpi_date . '_' . $item->operator_code => $item];
+        });
 
         // ─── Ringkasan performa (summary) ────────────────────────────────────
         $daysAbove = 0;   // hari KPI >= 85%
@@ -176,6 +178,8 @@ class TrackingOperatorController extends Controller
         $pctAbove = $dayCount > 0 ? round(($daysAbove / $dayCount) * 100, 1) : 0;
         $pctBelow = $dayCount > 0 ? round(($daysBelow / $dayCount) * 100, 1) : 0;
 
+        $isMultiOperator = (!$operatorCode || $operatorCode === 'all');
+
         $summaryData = [
             'day_count' => $dayCount,
             'days_above' => $daysAbove,
@@ -183,6 +187,8 @@ class TrackingOperatorController extends Controller
             'pct_above' => $pctAbove,
             'pct_below' => $pctBelow,
             'overall_avg' => $overallAvg,
+            'unit' => $isMultiOperator ? 'operator' : 'hari',
+            'label' => $isMultiOperator ? 'Jumlah Operator' : 'Jumlah Hari'
         ];
 
         $pdf = Pdf::loadView('tracking.operator.pdf', [

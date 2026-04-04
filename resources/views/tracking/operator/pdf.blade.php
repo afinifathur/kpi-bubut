@@ -97,7 +97,7 @@
             @forelse ($rows as $row)
                 @php
                     $tgl      = $row->production_date;
-                    $dailyKpi = $dailyKpiMap[$tgl] ?? null;
+                    $dailyKpi = $dailyKpiMap[$tgl . '_' . $row->operator_code] ?? null;
                     $dailyPct = $dailyKpi ? $dailyKpi->kpi_percent : null;
 
                     // Warna KPI per pekerjaan
@@ -181,7 +181,7 @@
                 <thead>
                     <tr style="background-color: #f2f2f2;">
                         <th style="border:1px solid #999; padding:5px 8px; text-align:center; width:40%;">Kategori</th>
-                        <th style="border:1px solid #999; padding:5px 8px; text-align:center; width:20%;">Jumlah Hari</th>
+                        <th style="border:1px solid #999; padding:5px 8px; text-align:center; width:20%;">{{ $summaryData['label'] ?? 'Jumlah Hari' }}</th>
                         <th style="border:1px solid #999; padding:5px 8px; text-align:center; width:20%;">Persentase</th>
                         <th style="border:1px solid #999; padding:5px 8px; text-align:center; width:20%;">Status</th>
                     </tr>
@@ -190,7 +190,7 @@
                     <tr>
                         <td style="border:1px solid #999; padding:5px 8px;">✅ Di atas target (KPI ≥ 85%)</td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold; color:#166534;">
-                            {{ $summaryData['days_above'] }} hari
+                            {{ $summaryData['days_above'] }} {{ $summaryData['unit'] ?? 'hari' }}
                         </td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold; color:#166534;">
                             {{ $summaryData['pct_above'] }}%
@@ -202,7 +202,7 @@
                     <tr>
                         <td style="border:1px solid #999; padding:5px 8px;">❌ Di bawah target (KPI &lt; 85%)</td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold; color:#dc2626;">
-                            {{ $summaryData['days_below'] }} hari
+                            {{ $summaryData['days_below'] }} {{ $summaryData['unit'] ?? 'hari' }}
                         </td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold; color:#dc2626;">
                             {{ $summaryData['pct_below'] }}%
@@ -212,8 +212,8 @@
                         </td>
                     </tr>
                     <tr style="background-color:#f9f9f9;">
-                        <td style="border:1px solid #999; padding:5px 8px;"><strong>Total Hari Kerja</strong></td>
-                        <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold;">{{ $summaryData['day_count'] }} hari</td>
+                        <td style="border:1px solid #999; padding:5px 8px;"><strong>Total {{ $summaryData['unit'] === 'operator' ? 'Operator' : 'Hari Kerja' }}</strong></td>
+                        <td style="border:1px solid #999; padding:5px 8px; text-align:center; font-weight:bold;">{{ $summaryData['day_count'] }} {{ $summaryData['unit'] ?? 'hari' }}</td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center;">—</td>
                         <td style="border:1px solid #999; padding:5px 8px; text-align:center;">—</td>
                     </tr>
