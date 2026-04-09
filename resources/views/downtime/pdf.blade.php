@@ -125,7 +125,8 @@
                     <td>
                         @if($row->entry_type === 'check')
                             <strong>{{ $row->size_category }} - {{ strtoupper($row->rpm_feeding_mode) }}</strong><br>
-                            RPM: {{ $row->rpm_value }} | Feeding: {{ $row->feeding_value }}<br>
+                            RPM (S/I): {{ $row->rpm_value }} / {{ $row->rpm_id_value ?? '-' }}<br>
+                            Feed (S/I): {{ $row->feeding_value }} / {{ $row->feeding_id_value ?? '-' }}<br>
                             Cek: {{ $row->check_cekam }}/{{ $row->check_air_ozo }}/{{ $row->check_eretan }}/{{ $row->check_pisau }}/{{ $row->check_kebersihan }}/{{ $row->check_oli }}
                         @else
                             <strong>{{ $row->reason }}</strong><br>

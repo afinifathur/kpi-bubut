@@ -6,6 +6,14 @@
 
     @php
         $standards = [
+            '1/2" - 3/4"' => [
+                'kasar' => ['rpm' => 380, 'feeding' => 0.17],
+                'finish' => ['rpm' => 450, 'feeding' => 0.2]
+            ],
+            '1"' => [
+                'kasar' => ['rpm' => 350, 'feeding' => 0.17],
+                'finish' => ['rpm' => 450, 'feeding' => 0.2]
+            ],
             '1-1/4" - 2"' => [
                 'kasar' => ['rpm' => 300, 'feeding' => 0.17],
                 'finish' => ['rpm' => 380, 'feeding' => 0.2]
@@ -21,6 +29,10 @@
             '5" - 6"' => [
                 'kasar' => ['rpm' => 220, 'feeding' => 0.17],
                 'finish' => ['rpm' => 260, 'feeding' => 0.2]
+            ],
+            '8"' => [
+                'kasar' => ['rpm' => 200, 'feeding' => 0.16],
+                'finish' => ['rpm' => 240, 'feeding' => 0.2]
             ]
         ];
 
@@ -144,20 +156,24 @@
                                         @endphp
 
                                         <div class="flex gap-3 border-l border-slate-100 pl-3">
-                                            <div class="flex items-center gap-1 group/val relative">
-                                                <span class="text-[7px] font-bold text-slate-300 uppercase">RPM:</span>
+                                            <div class="flex flex-col gap-0.5">
                                                 <div class="flex items-center gap-1">
-                                                    <span class="text-[10px] {{ $rpmClass }}" title="Samping">{{ $row->rpm_value }}</span>
-                                                    <span class="text-[8px] text-slate-300">/</span>
-                                                    <span class="text-[10px] {{ $rpmIdClass }}" title="ID">{{ $row->rpm_id_value ?? '-' }}</span>
+                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">RPM S:</span>
+                                                    <span class="text-[10px] {{ $rpmClass }}">{{ $row->rpm_value }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">RPM I:</span>
+                                                    <span class="text-[10px] {{ $rpmIdClass }}">{{ $row->rpm_id_value ?? '-' }}</span>
                                                 </div>
                                             </div>
-                                            <div class="flex items-center gap-1 group/val relative">
-                                                <span class="text-[7px] font-bold text-slate-300 uppercase">FEED:</span>
+                                            <div class="flex flex-col gap-0.5">
                                                 <div class="flex items-center gap-1">
-                                                    <span class="text-[10px] {{ $feedClass }}" title="Samping">{{ $row->feeding_value }}</span>
-                                                    <span class="text-[8px] text-slate-300">/</span>
-                                                    <span class="text-[10px] {{ $feedIdClass }}" title="ID">{{ $row->feeding_id_value ?? '-' }}</span>
+                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">FD S:</span>
+                                                    <span class="text-[10px] {{ $feedClass }}">{{ $row->feeding_value }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">FD I:</span>
+                                                    <span class="text-[10px] {{ $feedIdClass }}">{{ $row->feeding_id_value ?? '-' }}</span>
                                                 </div>
                                             </div>
                                         </div>
