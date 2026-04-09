@@ -103,23 +103,23 @@
             @endphp
             
             <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md hover:border-blue-200 transition-all duration-300">
-                <div class="px-4 py-2.5">
-                    <div class="flex flex-col lg:flex-row gap-6">
+                <div class="px-4 py-2">
+                    <div class="flex flex-col lg:flex-row gap-5">
                         {{-- Left: Machine Info & Checklist (Ultra Compact) --}}
-                        <div class="lg:w-1/4 flex flex-col space-y-2">
-                            <div class="flex items-center gap-3">
+                        <div class="lg:w-1/4 flex flex-col space-y-1.5">
+                            <div class="flex items-center gap-2.5">
                                 <div class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center {{ $statusColor }} shadow-inner">
                                     <span class="material-icons-round text-lg">{{ $statusIcon }}</span>
                                 </div>
                                 <div class="min-w-0">
-                                    <h3 class="font-extrabold text-slate-800 text-[13px] leading-none uppercase tracking-tight truncate">{{ $machineName }}</h3>
+                                    <h3 class="font-extrabold text-slate-800 text-[14px] leading-none uppercase tracking-tight truncate">{{ $machineName }}</h3>
                                     <span class="text-[8px] font-mono text-slate-400 uppercase tracking-widest block mt-0.5">{{ $machineCode }}</span>
                                 </div>
                             </div>
 
                             @if($hasCheck)
                                 @php $row = $checks->first(); @endphp
-                                <div class="flex flex-col gap-2">
+                                <div class="flex flex-col gap-1.5">
                                     {{-- Checklist Icons (Single Row) --}}
                                     <div class="flex items-center bg-slate-50/50 p-1 rounded-lg border border-slate-100 divide-x divide-slate-100">
                                         @php
@@ -133,10 +133,10 @@
                                             ];
                                         @endphp
                                         @foreach($checklist as $item)
-                                            <div class="flex-1 flex flex-col items-center justify-center px-1 {{ $item['val'] === 'Ya' ? 'text-emerald-500' : 'text-rose-400' }}"
+                                            <div class="flex-1 flex flex-col items-center justify-center px-0.5 {{ $item['val'] === 'Ya' ? 'text-emerald-500' : 'text-rose-400' }}"
                                                 title="{{ $item['label'] }}">
-                                                <span class="text-[5px] font-black leading-none mb-0.5 opacity-60 uppercase">{{ substr($item['label'], 0, 3) }}</span>
-                                                <span class="material-icons-round text-[11px]">
+                                                <span class="text-[7px] font-extrabold leading-none mb-0.5 opacity-80 uppercase">{{ substr($item['label'], 0, 3) }}</span>
+                                                <span class="material-icons-round text-[16px]">
                                                     {{ $item['val'] === 'Ya' ? 'check_circle' : 'cancel' }}
                                                 </span>
                                             </div>
@@ -145,15 +145,15 @@
 
                                     {{-- Size Category Badge (Super Small) --}}
                                     <div class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-indigo-50 border border-indigo-100/50 rounded-md self-start">
-                                        <span class="material-icons-round text-indigo-400 text-[10px]">straighten</span>
-                                        <span class="font-extrabold text-indigo-700 text-[9px]">Size: {{ $row->size_category }}</span>
+                                        <span class="material-icons-round text-indigo-400 text-[11px]">straighten</span>
+                                        <span class="font-extrabold text-indigo-700 text-[10px]">Size: {{ $row->size_category }}</span>
                                     </div>
                                 </div>
                             @endif
                         </div>
 
                         {{-- Right: Content Lists (Tighten) --}}
-                        <div class="flex-1 space-y-2.5">
+                        <div class="flex-1 space-y-1.5">
                             {{-- Check Entries Section --}}
                             @if($hasCheck)
                                 <div class="space-y-1">
@@ -165,37 +165,37 @@
                                             $feedClass = getStatusClass($row->feeding_value, $std['feeding'] ?? null);
                                             $feedIdClass = getStatusClass($row->feeding_id_value, $std['feeding'] ?? null);
                                         @endphp
-                                        <div class="group relative flex items-center gap-4 py-1.5 px-3 bg-white border border-slate-50 rounded-lg hover:bg-slate-50/80 hover:border-slate-200 transition-all">
+                                        <div class="group relative flex items-center gap-4 py-1 px-3 bg-white border border-slate-50 rounded-lg hover:bg-slate-50 hover:border-slate-200 transition-all">
                                             <div class="w-12 flex-shrink-0">
-                                                <span class="text-[9px] font-black uppercase {{ $row->rpm_feeding_mode === 'finish' ? 'text-blue-600' : 'text-slate-400' }}">
+                                                <span class="text-[10px] font-black uppercase {{ $row->rpm_feeding_mode === 'finish' ? 'text-blue-600' : 'text-slate-400' }}">
                                                     {{ $row->rpm_feeding_mode }}
                                                 </span>
                                             </div>
                                             
                                             <div class="grid grid-cols-4 gap-x-6 flex-1">
                                                 <div class="flex flex-col">
-                                                    <span class="text-[6px] font-bold text-slate-400 uppercase leading-none">RPM SP</span>
-                                                    <span class="text-[10px] {{ $rpmClass }} leading-tight">{{ $row->rpm_value }}</span>
+                                                    <span class="text-[8px] font-bold text-slate-400 uppercase leading-none">RPM SP</span>
+                                                    <span class="text-[12px] {{ $rpmClass }} leading-tight font-black">{{ $row->rpm_value }}</span>
                                                 </div>
                                                 <div class="flex flex-col">
-                                                    <span class="text-[6px] font-bold text-slate-400 uppercase leading-none">RPM ID</span>
-                                                    <span class="text-[10px] {{ $rpmIdClass }} leading-tight">{{ $row->rpm_id_value ?? '-' }}</span>
+                                                    <span class="text-[8px] font-bold text-slate-400 uppercase leading-none">RPM ID</span>
+                                                    <span class="text-[12px] {{ $rpmIdClass }} leading-tight font-black">{{ $row->rpm_id_value ?? '-' }}</span>
                                                 </div>
                                                 <div class="flex flex-col">
-                                                    <span class="text-[6px] font-bold text-slate-400 uppercase leading-none">FD SP</span>
-                                                    <span class="text-[10px] {{ $feedClass }} leading-tight">{{ $row->feeding_value }}</span>
+                                                    <span class="text-[8px] font-bold text-slate-400 uppercase leading-none">FD SP</span>
+                                                    <span class="text-[12px] {{ $feedClass }} leading-tight font-black">{{ $row->feeding_value }}</span>
                                                 </div>
                                                 <div class="flex flex-col">
-                                                    <span class="text-[6px] font-bold text-slate-400 uppercase leading-none">FD ID</span>
-                                                    <span class="text-[10px] {{ $feedIdClass }} leading-tight">{{ $row->feeding_id_value ?? '-' }}</span>
+                                                    <span class="text-[8px] font-bold text-slate-400 uppercase leading-none">FD ID</span>
+                                                    <span class="text-[12px] {{ $feedIdClass }} leading-tight font-black">{{ $row->feeding_id_value ?? '-' }}</span>
                                                 </div>
                                             </div>
 
                                             <div class="flex items-center gap-2">
                                                 @if($row->note)
                                                     <div class="group/note relative">
-                                                        <span class="material-icons-round text-slate-300 text-[13px] cursor-help hover:text-blue-400">info</span>
-                                                        <div class="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[9px] rounded-md opacity-0 pointer-events-none group-hover/note:opacity-100 transition-opacity z-10 shadow-xl">
+                                                        <span class="material-icons-round text-slate-300 text-[14px] cursor-help hover:text-blue-400">info</span>
+                                                        <div class="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-md opacity-0 pointer-events-none group-hover/note:opacity-100 transition-opacity z-10 shadow-xl">
                                                             {{ $row->note }}
                                                             <div class="absolute top-full right-2 border-4 border-transparent border-t-slate-800"></div>
                                                         </div>
@@ -227,21 +227,21 @@
                             @if($hasStop)
                                 <div class="space-y-1">
                                     @foreach($stops as $row)
-                                        <div class="group relative flex items-center gap-3 py-1.5 px-3 bg-rose-50/20 border border-rose-100/30 rounded-lg hover:bg-rose-50/40 transition-all">
+                                        <div class="group relative flex items-center gap-3 py-1 px-3 bg-rose-50/20 border border-rose-100/30 rounded-lg hover:bg-rose-50/40 transition-all">
                                             <div class="flex-1 flex items-center gap-3">
                                                 <div class="flex items-center gap-1.5 text-rose-500 flex-shrink-0">
-                                                    <span class="material-icons-round text-[13px]">report_problem</span>
-                                                    <span class="font-extrabold text-[10px] uppercase truncate max-w-[120px]">{{ $row->reason }}</span>
+                                                    <span class="material-icons-round text-[14px]">report_problem</span>
+                                                    <span class="font-extrabold text-[11px] uppercase truncate max-w-[150px]">{{ $row->reason }}</span>
                                                 </div>
-                                                <div class="flex items-center gap-3 text-[9px] text-slate-500 border-l border-rose-100/50 pl-3">
+                                                <div class="flex items-center gap-3 text-[10px] text-slate-500 border-l border-rose-100/50 pl-3">
                                                     <span class="flex items-center gap-1 opacity-60">
-                                                        <span class="material-icons-round text-[11px]">schedule</span>
+                                                        <span class="material-icons-round text-[12px]">schedule</span>
                                                         {{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }}-{{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}
                                                     </span>
                                                     <span class="font-black text-rose-500">{{ $row->duration_minutes }}m</span>
                                                 </div>
                                                 @if($row->note)
-                                                    <span class="text-[9px] text-slate-400 italic truncate max-w-[150px]">"{{ $row->note }}"</span>
+                                                    <span class="text-[10px] text-slate-400 italic truncate max-w-[200px]">"{{ $row->note }}"</span>
                                                 @endif
                                             </div>
 
