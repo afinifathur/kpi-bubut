@@ -135,7 +135,7 @@
                                         @foreach($checklist as $item)
                                             <div class="flex-1 flex flex-col items-center justify-center px-0.5 {{ $item['val'] === 'Ya' ? 'text-emerald-500' : 'text-rose-400' }}"
                                                 title="{{ $item['label'] }}">
-                                                <span class="text-[7px] font-extrabold leading-none mb-0.5 opacity-80 uppercase">{{ substr($item['label'], 0, 3) }}</span>
+                                                <span class="text-[12px] font-extrabold leading-none mb-1 opacity-90 uppercase">{{ substr($item['label'], 0, 3) }}</span>
                                                 <span class="material-icons-round text-[16px]">
                                                     {{ $item['val'] === 'Ya' ? 'check_circle' : 'cancel' }}
                                                 </span>
