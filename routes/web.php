@@ -153,7 +153,7 @@ Route::middleware('auth')->group(function () {
     */
     Route::prefix('export')->name('export.')->group(function () {
         Route::get('/operator', [\App\Http\Controllers\ExportController::class, 'operatorKpi'])->name('operator');
-        Route::get('/machine/{date}', [\App\Http\Controllers\ExportController::class, 'machineKpi'])->name('machine');
+        Route::get('/machine/{date?}', [\App\Http\Controllers\ExportController::class, 'machineKpi'])->name('machine');
         Route::get('/downtime/{date}', [\App\Http\Controllers\ExportController::class, 'downtime'])->name('downtime');
     });
 

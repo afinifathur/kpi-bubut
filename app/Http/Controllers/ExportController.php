@@ -28,11 +28,23 @@ class ExportController extends Controller
         );
     }
 
-    public function machineKpi(string $date)
+    public function machineKpi(?string $date = null)
     {
+        $startDate = request('start_date', $date ?? date('Y-m-d'));
+        $endDate = request('end_date', $date ?? date('Y-m-d'));
+        $machineCode = request('machine_code');
+
+        // Sanitize "all" to null
+        if ($machineCode === 'all') {
+            $machineCode = null;
+        }
+
+        $suffix = $machineCode ? "{$machineCode}_" : 'all_';
+        $filename = "kpi_machine_{$suffix}{$startDate}_to_{$endDate}.xlsx";
+
         return Excel::download(
-            new MachineKpiExport($date),
-            "kpi_machine_{$date}.xlsx"
+            new MachineKpiExport($startDate, $endDate, $machineCode),
+            $filename
         );
     }
 
