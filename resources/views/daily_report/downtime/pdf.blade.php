@@ -160,6 +160,14 @@
                         @if($row->entry_type === 'check')
                             @php
                                 $standards = [
+                                    '1/2" - 3/4"' => [
+                                        'kasar' => ['rpm' => 380, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 450, 'feeding' => 0.2]
+                                    ],
+                                    '1"' => [
+                                        'kasar' => ['rpm' => 350, 'feeding' => 0.17],
+                                        'finish' => ['rpm' => 450, 'feeding' => 0.2]
+                                    ],
                                     '1-1/4" - 2"' => [
                                         'kasar' => ['rpm' => 300, 'feeding' => 0.17],
                                         'finish' => ['rpm' => 380, 'feeding' => 0.2]
@@ -175,6 +183,10 @@
                                     '5" - 6"' => [
                                         'kasar' => ['rpm' => 220, 'feeding' => 0.17],
                                         'finish' => ['rpm' => 260, 'feeding' => 0.2]
+                                    ],
+                                    '8"' => [
+                                        'kasar' => ['rpm' => 200, 'feeding' => 0.16],
+                                        'finish' => ['rpm' => 240, 'feeding' => 0.2]
                                     ]
                                 ];
 
@@ -190,10 +202,22 @@
                                 }
 
                                 $rpmColor = getPdfColor($row->rpm_value, $std['rpm'] ?? null);
+                                $rpmIdColor = getPdfColor($row->rpm_id_value, $std['rpm'] ?? null);
                                 $feedColor = getPdfColor($row->feeding_value, $std['feeding'] ?? null);
+                                $feedIdColor = getPdfColor($row->feeding_id_value, $std['feeding'] ?? null);
                             @endphp
-                            <div>RPM: <span class="font-bold" style="color: {{ $rpmColor }};">{{ $row->rpm_value }}</span></div>
-                            <div>Feed: <span class="font-bold" style="color: {{ $feedColor }};">{{ $row->feeding_value }}</span></div>
+                            <div style="font-size: 7pt;">
+                                RPM: 
+                                <span class="font-bold" style="color: {{ $rpmColor }};">{{ $row->rpm_value }}</span> 
+                                <small style="color: #cbd5e1">/</small> 
+                                <span class="font-bold" style="color: {{ $rpmIdColor }};">{{ $row->rpm_id_value ?? '-' }}</span>
+                            </div>
+                            <div style="font-size: 7pt;">
+                                Feed: 
+                                <span class="font-bold" style="color: {{ $feedColor }};">{{ $row->feeding_value }}</span> 
+                                <small style="color: #cbd5e1">/</small> 
+                                <span class="font-bold" style="color: {{ $feedIdColor }};">{{ $row->feeding_id_value ?? '-' }}</span>
+                            </div>
                         @else
                             <div class="font-bold" style="color: #dc2626; font-size: 10pt;">{{ $row->duration_minutes }} <span style="font-size: 7pt;">min</span></div>
                         @endif

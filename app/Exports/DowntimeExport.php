@@ -26,7 +26,9 @@ class DowntimeExport implements FromCollection, WithHeadings
                 'size_category',
                 'rpm_feeding_mode',
                 'rpm_value',
+                'rpm_id_value',
                 'feeding_value',
+                'feeding_id_value',
                 'check_cekam',
                 'check_air_ozo',
                 'check_eretan',
@@ -51,8 +53,10 @@ class DowntimeExport implements FromCollection, WithHeadings
                     'oli' => $row->entry_type === 'check' ? $row->check_oli : '-',
                     'size' => $row->entry_type === 'check' ? $row->size_category : '-',
                     'mode' => $row->entry_type === 'check' ? ucfirst($row->rpm_feeding_mode) : '-',
-                    'rpm' => $row->entry_type === 'check' ? $row->rpm_value : '-',
-                    'feeding' => $row->entry_type === 'check' ? $row->feeding_value : '-',
+                    'rpm_samping' => $row->entry_type === 'check' ? $row->rpm_value : '-',
+                    'rpm_id' => $row->entry_type === 'check' ? $row->rpm_id_value : '-',
+                    'feeding_samping' => $row->entry_type === 'check' ? $row->feeding_value : '-',
+                    'feeding_id' => $row->entry_type === 'check' ? $row->feeding_id_value : '-',
                     'catatan' => $row->note ?? '-',
                 ];
             });
@@ -73,8 +77,10 @@ class DowntimeExport implements FromCollection, WithHeadings
             'OLI',
             'Size (Check)',
             'Mode (Check)',
-            'RPM',
-            'Feeding',
+            'RPM Samping',
+            'RPM ID',
+            'Feeding Samping',
+            'Feeding ID',
             'Catatan',
         ];
     }

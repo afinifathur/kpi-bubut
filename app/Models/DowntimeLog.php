@@ -32,7 +32,9 @@ class DowntimeLog extends Model
         'check_kebersihan',
         'check_oli',
         'rpm_value',
+        'rpm_id_value',
         'feeding_value',
+        'feeding_id_value',
         'rpm_feeding_mode',
         'note',
     ];

@@ -526,7 +526,9 @@ class DailyReportController extends Controller
                 'check_kebersihan' => 'required|in:Ya,Tidak',
                 'check_oli' => 'required|in:Ya,Tidak',
                 'rpm_value' => 'required|integer',
+                'rpm_id_value' => 'required|integer',
                 'feeding_value' => 'required|numeric',
+                'feeding_id_value' => 'required|numeric',
             ];
         }
 
@@ -555,7 +557,9 @@ class DailyReportController extends Controller
                 'check_kebersihan' => $validated['check_kebersihan'],
                 'check_oli' => $validated['check_oli'],
                 'rpm_value' => $validated['rpm_value'],
+                'rpm_id_value' => $validated['rpm_id_value'],
                 'feeding_value' => $validated['feeding_value'],
+                'feeding_id_value' => $validated['feeding_id_value'],
                 'note' => $validated['note'] ?? null,
             ]);
         }

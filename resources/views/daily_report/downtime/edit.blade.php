@@ -133,23 +133,43 @@
 
                                 {{-- RPM & Feeding Inputs --}}
                                 <div class="space-y-4">
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between items-center">
-                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kecepatan RPM</label>
-                                            <span class="text-[10px] font-bold text-slate-400" x-text="'Std: ' + (currentStd.rpm || '-')"></span>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <div class="flex justify-between items-center">
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">RPM Samping</label>
+                                                <span class="text-[9px] font-bold text-slate-400" x-text="'Std: ' + (currentStd.rpm || '-')"></span>
+                                            </div>
+                                            <input type="number" name="rpm_value" x-model="rpmInput" required
+                                                :class="rpmStatus"
+                                                class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
                                         </div>
-                                        <input type="number" name="rpm_value" x-model="rpmInput" required
-                                            :class="rpmStatus"
-                                            class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
+                                        <div class="space-y-1.5">
+                                            <div class="flex justify-between items-center">
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">RPM ID</label>
+                                            </div>
+                                            <input type="number" name="rpm_id_value" x-model="rpmIdInput" required
+                                                :class="rpmIdStatus"
+                                                class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
+                                        </div>
                                     </div>
-                                    <div class="space-y-1.5">
-                                        <div class="flex justify-between items-center">
-                                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Kecepatan Feeding</label>
-                                            <span class="text-[10px] font-bold text-slate-400" x-text="'Std: ' + (currentStd.feeding || '-')"></span>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="space-y-1.5">
+                                            <div class="flex justify-between items-center">
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Feeding Samping</label>
+                                                <span class="text-[9px] font-bold text-slate-400" x-text="'Std: ' + (currentStd.feeding || '-')"></span>
+                                            </div>
+                                            <input type="number" step="0.01" name="feeding_value" x-model="feedingInput" required
+                                                :class="feedingStatus"
+                                                class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
                                         </div>
-                                        <input type="number" step="0.01" name="feeding_value" x-model="feedingInput" required
-                                            :class="feedingStatus"
-                                            class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
+                                        <div class="space-y-1.5">
+                                            <div class="flex justify-between items-center">
+                                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Feeding ID</label>
+                                            </div>
+                                            <input type="number" step="0.01" name="feeding_id_value" x-model="feedingIdInput" required
+                                                :class="feedingIdStatus"
+                                                class="w-full border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-sm p-3 font-black">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +225,9 @@
                 selectedSize: '{{ $log->size_category }}',
                 mode: '{{ $log->rpm_feeding_mode }}',
                 rpmInput: '{{ $log->rpm_value }}',
+                rpmIdInput: '{{ $log->rpm_id_value }}',
                 feedingInput: '{{ $log->feeding_value }}',
+                feedingIdInput: '{{ $log->feeding_id_value }}',
                 currentStd: { rpm: null, feeding: null },
                 checkValues: {
                     check_cekam: '{{ $log->check_cekam }}',
@@ -226,6 +248,14 @@
                 ],
 
                 standards: {
+                    '1/2" - 3/4"': {
+                        'kasar': { rpm: 380, feeding: 0.17 },
+                        'finish': { rpm: 450, feeding: 0.2 }
+                    },
+                    '1"': {
+                        'kasar': { rpm: 350, feeding: 0.17 },
+                        'finish': { rpm: 450, feeding: 0.2 }
+                    },
                     '1-1/4" - 2"': {
                         'kasar': { rpm: 300, feeding: 0.17 },
                         'finish': { rpm: 380, feeding: 0.2 }
@@ -241,6 +271,10 @@
                     '5" - 6"': {
                         'kasar': { rpm: 220, feeding: 0.17 },
                         'finish': { rpm: 260, feeding: 0.2 }
+                    },
+                    '8"': {
+                        'kasar': { rpm: 200, feeding: 0.16 },
+                        'finish': { rpm: 240, feeding: 0.2 }
                     }
                 },
 
@@ -281,8 +315,16 @@
                     return this.calcStatus(this.rpmInput, this.currentStd.rpm);
                 },
 
+                get rpmIdStatus() {
+                    return this.calcStatus(this.rpmIdInput, this.currentStd.rpm);
+                },
+
                 get feedingStatus() {
                     return this.calcStatus(this.feedingInput, this.currentStd.feeding);
+                },
+
+                get feedingIdStatus() {
+                    return this.calcStatus(this.feedingIdInput, this.currentStd.feeding);
                 }
             }
         }

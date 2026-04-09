@@ -138,17 +138,27 @@
                                         @php
                                             $std = $standards[$row->size_category][$row->rpm_feeding_mode] ?? null;
                                             $rpmClass = getStatusClass($row->rpm_value, $std['rpm'] ?? null);
+                                            $rpmIdClass = getStatusClass($row->rpm_id_value, $std['rpm'] ?? null);
                                             $feedClass = getStatusClass($row->feeding_value, $std['feeding'] ?? null);
+                                            $feedIdClass = getStatusClass($row->feeding_id_value, $std['feeding'] ?? null);
                                         @endphp
 
                                         <div class="flex gap-3 border-l border-slate-100 pl-3">
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-[8px] font-bold text-slate-400 uppercase">RPM:</span>
-                                                <span class="text-[11px] {{ $rpmClass }}">{{ $row->rpm_value }}</span>
+                                            <div class="flex items-center gap-1 group/val relative">
+                                                <span class="text-[7px] font-bold text-slate-300 uppercase">RPM:</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[10px] {{ $rpmClass }}" title="Samping">{{ $row->rpm_value }}</span>
+                                                    <span class="text-[8px] text-slate-300">/</span>
+                                                    <span class="text-[10px] {{ $rpmIdClass }}" title="ID">{{ $row->rpm_id_value ?? '-' }}</span>
+                                                </div>
                                             </div>
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-[8px] font-bold text-slate-400 uppercase">FD:</span>
-                                                <span class="text-[11px] {{ $feedClass }}">{{ $row->feeding_value }}</span>
+                                            <div class="flex items-center gap-1 group/val relative">
+                                                <span class="text-[7px] font-bold text-slate-300 uppercase">FEED:</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[10px] {{ $feedClass }}" title="Samping">{{ $row->feeding_value }}</span>
+                                                    <span class="text-[8px] text-slate-300">/</span>
+                                                    <span class="text-[10px] {{ $feedIdClass }}" title="ID">{{ $row->feeding_id_value ?? '-' }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
