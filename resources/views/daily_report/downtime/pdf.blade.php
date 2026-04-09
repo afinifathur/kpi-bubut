@@ -109,6 +109,48 @@
         <p>{{ \Carbon\Carbon::parse($date)->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
     </div>
 
+    @php
+        $standards = [
+            '1/2" - 3/4"' => [
+                'kasar' => ['rpm' => 380, 'feeding' => 0.17],
+                'finish' => ['rpm' => 450, 'feeding' => 0.2]
+            ],
+            '1"' => [
+                'kasar' => ['rpm' => 350, 'feeding' => 0.17],
+                'finish' => ['rpm' => 450, 'feeding' => 0.2]
+            ],
+            '1-1/4" - 2"' => [
+                'kasar' => ['rpm' => 300, 'feeding' => 0.17],
+                'finish' => ['rpm' => 380, 'feeding' => 0.2]
+            ],
+            '2" - 2-1/2"' => [
+                'kasar' => ['rpm' => 300, 'feeding' => 0.17],
+                'finish' => ['rpm' => 350, 'feeding' => 0.2]
+            ],
+            '3" - 4"' => [
+                'kasar' => ['rpm' => 250, 'feeding' => 0.17],
+                'finish' => ['rpm' => 320, 'feeding' => 0.2]
+            ],
+            '5" - 6"' => [
+                'kasar' => ['rpm' => 220, 'feeding' => 0.17],
+                'finish' => ['rpm' => 260, 'feeding' => 0.2]
+            ],
+            '8"' => [
+                'kasar' => ['rpm' => 200, 'feeding' => 0.16],
+                'finish' => ['rpm' => 240, 'feeding' => 0.2]
+            ]
+        ];
+
+        if (!function_exists('getPdfColor')) {
+            function getPdfColor($input, $std) {
+                if (!$input || !$std) return '#64748b'; // slate-500
+                $val = (float) $input;
+                $diff = abs($val - $std) / $std;
+                return $diff > 0.2 ? '#dc2626' : '#059669'; // red-600 vs emerald-600
+            }
+        }
+    @endphp
+
     <table>
         <thead>
             <tr>
@@ -119,107 +161,97 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($rows as $row)
+            @foreach($rows->groupBy('machine_code') as $machineCode => $mRows)
+                @php
+                    $checks = $mRows->where('entry_type', 'check');
+                    $stops = $mRows->where('entry_type', 'downtime');
+                    $first = $mRows->first();
+                    $machineName = $first->machine->name ?? $machineCode;
+                @endphp
                 <tr>
                     <td class="font-bold">
-                        {{ $row->machine->name ?? $row->machine_code }}
-                        <div style="font-size: 6pt; color: #94a3b8; font-weight: normal;">{{ $row->machine_code }}</div>
+                        {{ $machineName }}
+                        <div style="font-size: 6pt; color: #94a3b8; font-weight: normal;">{{ $machineCode }}</div>
                     </td>
                     <td class="text-center font-bold">
-                        @if($row->entry_type === 'check')
-                            <span class="type-check">CEK</span>
-                        @else
-                            <span class="type-downtime">STOP</span>
+                        @if($checks->isNotEmpty())
+                            <div class="type-check">CEK</div>
+                        @endif
+                        @if($stops->isNotEmpty())
+                            <div class="type-downtime">STOP</div>
                         @endif
                     </td>
                     <td>
-                        @if($row->entry_type === 'check')
-                            <div style="margin-bottom: 4px;">
-                                <span class="check-item {{ $row->check_cekam === 'Ya' ? 'check-yes' : 'check-no' }}">CEKAM: {{ $row->check_cekam }}</span>
-                                <span class="check-item {{ $row->check_air_ozo === 'Ya' ? 'check-yes' : 'check-no' }}">OZON: {{ $row->check_air_ozo }}</span>
-                                <span class="check-item {{ $row->check_eretan === 'Ya' ? 'check-yes' : 'check-no' }}">ERETAN: {{ $row->check_eretan }}</span>
-                                <span class="check-item {{ $row->check_pisau === 'Ya' ? 'check-yes' : 'check-no' }}">PISAU: {{ $row->check_pisau }}</span>
-                                <span class="check-item {{ $row->check_kebersihan === 'Ya' ? 'check-yes' : 'check-no' }}">BERSIH: {{ $row->check_kebersihan }}</span>
-                                <span class="check-item {{ $row->check_oli === 'Ya' ? 'check-yes' : 'check-no' }}">OLI: {{ $row->check_oli }}</span>
-                            </div>
-                            <div class="font-bold" style="font-size: 7pt;">
-                                {{ $row->size_category }} | Mode: {{ ucfirst($row->rpm_feeding_mode) }}
-                            </div>
-                        @else
-                            <div class="font-bold" style="color: #dc2626;">{{ $row->reason }}</div>
-                            <div style="font-size: 7pt; color: #64748b;">
-                                Jam: {{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}
+                        @if($checks->isNotEmpty())
+                            @php $row = $checks->first(); @endphp
+                            <div style="margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #f1f5f9;">
+                                <div style="margin-bottom: 2px;">
+                                    <span class="check-item {{ $row->check_cekam === 'Ya' ? 'check-yes' : 'check-no' }}">CEKAM: {{ $row->check_cekam }}</span>
+                                    <span class="check-item {{ $row->check_air_ozo === 'Ya' ? 'check-yes' : 'check-no' }}">OZON: {{ $row->check_air_ozo }}</span>
+                                    <span class="check-item {{ $row->check_eretan === 'Ya' ? 'check-yes' : 'check-no' }}">ERETAN: {{ $row->check_eretan }}</span>
+                                    <span class="check-item {{ $row->check_pisau === 'Ya' ? 'check-yes' : 'check-no' }}">PISAU: {{ $row->check_pisau }}</span>
+                                    <span class="check-item {{ $row->check_kebersihan === 'Ya' ? 'check-yes' : 'check-no' }}">BERSIH: {{ $row->check_kebersihan }}</span>
+                                    <span class="check-item {{ $row->check_oli === 'Ya' ? 'check-yes' : 'check-no' }}">OLI: {{ $row->check_oli }}</span>
+                                </div>
+                                <div class="font-bold" style="font-size: 7pt;">
+                                    Size: {{ $row->size_category }}
+                                </div>
                             </div>
                         @endif
+
+                        @if($stops->isNotEmpty())
+                            @foreach($stops as $row)
+                                <div style="margin-bottom: 4px;">
+                                    <div class="font-bold" style="color: #dc2626;">STOP: {{ $row->reason }}</div>
+                                    <div style="font-size: 7pt; color: #64748b;">
+                                        Jam: {{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}
+                                        @if($row->note) | Catatan: {{ $row->note }} @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
                         
-                        @if($row->note)
-                            <div class="note">Catatan: {{ $row->note }}</div>
+                        {{-- Only show notes if they weren't shown in the stop section and they are from a check entry --}}
+                        @if($checks->isNotEmpty())
+                            @foreach($checks as $chk)
+                                @if($chk->note)
+                                    <div class="note">Catatan ({{ ucfirst($chk->rpm_feeding_mode) }}): {{ $chk->note }}</div>
+                                @endif
+                            @endforeach
                         @endif
                     </td>
                     <td class="text-right">
-                        @if($row->entry_type === 'check')
-                            @php
-                                $standards = [
-                                    '1/2" - 3/4"' => [
-                                        'kasar' => ['rpm' => 380, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 450, 'feeding' => 0.2]
-                                    ],
-                                    '1"' => [
-                                        'kasar' => ['rpm' => 350, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 450, 'feeding' => 0.2]
-                                    ],
-                                    '1-1/4" - 2"' => [
-                                        'kasar' => ['rpm' => 300, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 380, 'feeding' => 0.2]
-                                    ],
-                                    '2" - 2-1/2"' => [
-                                        'kasar' => ['rpm' => 300, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 350, 'feeding' => 0.2]
-                                    ],
-                                    '3" - 4"' => [
-                                        'kasar' => ['rpm' => 250, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 320, 'feeding' => 0.2]
-                                    ],
-                                    '5" - 6"' => [
-                                        'kasar' => ['rpm' => 220, 'feeding' => 0.17],
-                                        'finish' => ['rpm' => 260, 'feeding' => 0.2]
-                                    ],
-                                    '8"' => [
-                                        'kasar' => ['rpm' => 200, 'feeding' => 0.16],
-                                        'finish' => ['rpm' => 240, 'feeding' => 0.2]
-                                    ]
-                                ];
+                        @if($checks->isNotEmpty())
+                            @foreach($checks as $row)
+                                @php
+                                    $std = $standards[$row->size_category][$row->rpm_feeding_mode] ?? null;
+                                    $rpmColor = getPdfColor($row->rpm_value, $std['rpm'] ?? null);
+                                    $rpmIdColor = getPdfColor($row->rpm_id_value, $std['rpm'] ?? null);
+                                    $feedColor = getPdfColor($row->feeding_value, $std['feeding'] ?? null);
+                                    $feedIdColor = getPdfColor($row->feeding_id_value, $std['feeding'] ?? null);
+                                @endphp
+                                <div style="margin-bottom: 8px; border-bottom: 1px dotted #f1f5f9; padding-bottom: 4px;">
+                                    <div style="font-size: 6pt; font-weight: bold; color: #64748b; text-transform: uppercase;">{{ $row->rpm_feeding_mode }}</div>
+                                    <div style="font-size: 7pt;">
+                                        <span style="color: #64748b;">RPM SP:</span> 
+                                        <span class="font-bold" style="color: {{ $rpmColor }};">{{ $row->rpm_value }}</span> 
+                                        <span style="color: #64748b; margin-left: 4px;">ID:</span> 
+                                        <span class="font-bold" style="color: {{ $rpmIdColor }};">{{ $row->rpm_id_value ?? '-' }}</span>
+                                    </div>
+                                    <div style="font-size: 7pt; margin-top: 2px;">
+                                        <span style="color: #64748b;">FD SP:</span> 
+                                        <span class="font-bold" style="color: {{ $feedColor }};">{{ $row->feeding_value }}</span> 
+                                        <span style="color: #64748b; margin-left: 4px;">ID:</span> 
+                                        <span class="font-bold" style="color: {{ $feedIdColor }};">{{ $row->feeding_id_value ?? '-' }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @endif
 
-                                $std = $standards[$row->size_category][$row->rpm_feeding_mode] ?? null;
-                                
-                                if (!function_exists('getPdfColor')) {
-                                    function getPdfColor($input, $std) {
-                                        if (!$input || !$std) return '#64748b'; // slate-500
-                                        $val = (float) $input;
-                                        $diff = abs($val - $std) / $std;
-                                        return $diff > 0.2 ? '#dc2626' : '#059669'; // red-600 vs emerald-600
-                                    }
-                                }
-
-                                $rpmColor = getPdfColor($row->rpm_value, $std['rpm'] ?? null);
-                                $rpmIdColor = getPdfColor($row->rpm_id_value, $std['rpm'] ?? null);
-                                $feedColor = getPdfColor($row->feeding_value, $std['feeding'] ?? null);
-                                $feedIdColor = getPdfColor($row->feeding_id_value, $std['feeding'] ?? null);
-                            @endphp
-                            <div style="font-size: 7pt;">
-                                RPM: 
-                                <span class="font-bold" style="color: {{ $rpmColor }};">{{ $row->rpm_value }}</span> 
-                                <small style="color: #cbd5e1">/</small> 
-                                <span class="font-bold" style="color: {{ $rpmIdColor }};">{{ $row->rpm_id_value ?? '-' }}</span>
-                            </div>
-                            <div style="font-size: 7pt;">
-                                Feed: 
-                                <span class="font-bold" style="color: {{ $feedColor }};">{{ $row->feeding_value }}</span> 
-                                <small style="color: #cbd5e1">/</small> 
-                                <span class="font-bold" style="color: {{ $feedIdColor }};">{{ $row->feeding_id_value ?? '-' }}</span>
-                            </div>
-                        @else
-                            <div class="font-bold" style="color: #dc2626; font-size: 10pt;">{{ $row->duration_minutes }} <span style="font-size: 7pt;">min</span></div>
+                        @if($stops->isNotEmpty())
+                            @foreach($stops as $row)
+                                <div class="font-bold" style="color: #dc2626; font-size: 10pt; margin-top: 4px;">{{ $row->duration_minutes }} <span style="font-size: 7pt;">min</span></div>
+                            @endforeach
                         @endif
                     </td>
                 </tr>

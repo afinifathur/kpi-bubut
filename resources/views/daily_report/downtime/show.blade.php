@@ -81,42 +81,49 @@
         </div>
     @endif
 
-    <div class="space-y-2">
-        @forelse ($rows as $row)
-            <div
-                class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:border-blue-200 transition-all duration-200">
-                <div class="px-4 py-3">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    @php
+        $groupedRows = $rows->groupBy('machine_code');
+        $isReadOnly = auth()->user()->isReadOnly();
+    @endphp
+
+    <div class="space-y-4">
+        @forelse ($groupedRows as $machineCode => $mRows)
+            @php
+                $first = $mRows->first();
+                $checks = $mRows->where('entry_type', 'check');
+                $stops = $mRows->where('entry_type', 'downtime');
+                $hasCheck = $checks->isNotEmpty();
+                $hasStop = $stops->isNotEmpty();
+                
+                // Use first check for status icons, or first entry if no check exists
+                $baseRow = $hasCheck ? $checks->first() : $first;
+                $machineName = $baseRow->machine->name ?? $machineCode;
+                $statusColor = $hasStop ? 'text-red-600 bg-red-50' : 'text-emerald-600 bg-emerald-50';
+                $statusIcon = $hasStop ? 'timer_off' : 'fact_check';
+            @endphp
+            
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:border-blue-200 transition-all duration-200">
+                <div class="px-5 py-4">
+                    <div class="flex flex-col lg:flex-row gap-6">
                         {{-- Left: Machine Info --}}
-                        <div class="flex items-center gap-3 lg:w-1/4">
-                            <div
-                                class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center {{ $row->entry_type === 'check' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600' }}">
-                                <span class="material-icons-round text-lg">
-                                    {{ $row->entry_type === 'check' ? 'fact_check' : 'timer_off' }}
-                                </span>
-                            </div>
-                            <div class="min-w-0">
-                                <h3 class="font-bold text-slate-800 text-sm truncate uppercase">
-                                    {{ $row->machine->name ?? $row->machine_code }}</h3>
-                                <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span
-                                        class="text-[9px] font-mono text-slate-400 uppercase tracking-tighter">{{ $row->machine_code }}</span>
-                                    <span
-                                        class="text-[9px] font-black uppercase tracking-tighter {{ $row->entry_type === 'check' ? 'text-emerald-500' : 'text-red-500' }}">
-                                        {{ $row->entry_type === 'check' ? 'Cek' : 'Stop' }}
-                                    </span>
+                        <div class="lg:w-1/4 flex flex-col">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center {{ $statusColor }}">
+                                    <span class="material-icons-round text-xl">{{ $statusIcon }}</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="font-bold text-slate-800 text-base truncate uppercase">{{ $machineName }}</h3>
+                                    <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{{ $machineCode }}</span>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Middle: Detailed Content (Compact) --}}
-                        <div class="flex-1">
-                            @if($row->entry_type === 'check')
-                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                            @if($hasCheck)
+                                @php $row = $checks->first(); @endphp
+                                <div class="space-y-3">
                                     {{-- Checklist Icons --}}
-                                    <div class="flex items-center bg-slate-50 p-1 rounded-lg border border-slate-100 gap-1">
+                                    <div class="flex flex-wrap items-center bg-slate-50 p-2 rounded-xl border border-slate-100 gap-1.5">
                                         @php
-                                            $checks = [
+                                            $checklist = [
                                                 ['label' => 'CEKAM', 'val' => $row->check_cekam],
                                                 ['label' => 'OZON', 'val' => $row->check_air_ozo],
                                                 ['label' => 'ERETAN', 'val' => $row->check_eretan],
@@ -125,28 +132,36 @@
                                                 ['label' => 'OLI', 'val' => $row->check_oli],
                                             ];
                                         @endphp
-                                        @foreach($checks as $check)
-                                            <div class="flex flex-col items-center px-1.5 py-0.5 rounded {{ $check['val'] === 'Ya' ? 'text-emerald-600' : 'text-red-500' }}"
-                                                title="{{ $check['label'] }}">
-                                                <span class="text-[7px] font-black leading-none mb-0.5">{{ $check['label'] }}</span>
-                                                <span class="material-icons-round text-[12px]">
-                                                    {{ $check['val'] === 'Ya' ? 'check_circle' : 'cancel' }}
+                                        @foreach($checklist as $item)
+                                            <div class="flex flex-col items-center px-1.5 py-1 rounded {{ $item['val'] === 'Ya' ? 'text-emerald-600 bg-white shadow-sm' : 'text-red-500' }}"
+                                                title="{{ $item['label'] }}">
+                                                <span class="text-[7px] font-black leading-none mb-0.5">{{ $item['label'] }}</span>
+                                                <span class="material-icons-round text-[14px]">
+                                                    {{ $item['val'] === 'Ya' ? 'check_circle' : 'cancel' }}
                                                 </span>
                                             </div>
                                         @endforeach
                                     </div>
 
-                                    {{-- Technical Specs --}}
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-100 rounded-lg text-[10px]">
-                                            <span class="material-icons-round text-slate-300 text-[12px]">straighten</span>
-                                            <span
-                                                class="font-bold text-slate-600 truncate max-w-[80px]">{{ $row->size_category }}</span>
-                                            <span
-                                                class="font-black text-[8px] uppercase text-blue-500">{{ $row->rpm_feeding_mode }}</span>
-                                        </div>
+                                    {{-- Size Category --}}
+                                    <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50/50 border border-blue-100/50 rounded-lg text-[11px]">
+                                        <span class="material-icons-round text-blue-400 text-[14px]">straighten</span>
+                                        <span class="font-black text-blue-600">SIZE: {{ $row->size_category }}</span>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
 
+                        {{-- Middle & Right: List of Entries --}}
+                        <div class="flex-1 space-y-4">
+                            {{-- Check Entries Section --}}
+                            @if($hasCheck)
+                                <div class="space-y-2">
+                                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                        Pengecekan Setting
+                                    </h4>
+                                    @foreach($checks as $row)
                                         @php
                                             $std = $standards[$row->size_category][$row->rpm_feeding_mode] ?? null;
                                             $rpmClass = getStatusClass($row->rpm_value, $std['rpm'] ?? null);
@@ -154,82 +169,109 @@
                                             $feedClass = getStatusClass($row->feeding_value, $std['feeding'] ?? null);
                                             $feedIdClass = getStatusClass($row->feeding_id_value, $std['feeding'] ?? null);
                                         @endphp
-
-                                        <div class="flex gap-3 border-l border-slate-100 pl-3">
-                                            <div class="flex flex-col gap-0.5">
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">RPM S:</span>
-                                                    <span class="text-[10px] {{ $rpmClass }}">{{ $row->rpm_value }}</span>
-                                                </div>
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">RPM I:</span>
-                                                    <span class="text-[10px] {{ $rpmIdClass }}">{{ $row->rpm_id_value ?? '-' }}</span>
-                                                </div>
+                                        <div class="group relative flex flex-wrap items-center gap-4 p-3 bg-white border border-slate-100 rounded-xl hover:border-emerald-100 hover:bg-emerald-50/30 transition-all">
+                                            <div class="w-16">
+                                                <span class="text-[10px] font-black uppercase {{ $row->rpm_feeding_mode === 'finish' ? 'text-blue-600' : 'text-slate-500' }}">
+                                                    {{ $row->rpm_feeding_mode }}
+                                                </span>
                                             </div>
-                                            <div class="flex flex-col gap-0.5">
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">FD S:</span>
-                                                    <span class="text-[10px] {{ $feedClass }}">{{ $row->feeding_value }}</span>
+                                            
+                                            <div class="flex gap-6 flex-1 min-w-[200px]">
+                                                <div class="flex flex-col gap-0.5">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[8px] font-bold text-slate-500">RPM SAMPING:</span>
+                                                        <span class="text-[11px] {{ $rpmClass }}">{{ $row->rpm_value }}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[8px] font-bold text-slate-500">RPM ID:</span>
+                                                        <span class="text-[11px] {{ $rpmIdClass }}">{{ $row->rpm_id_value ?? '-' }}</span>
+                                                    </div>
                                                 </div>
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[7px] font-bold text-slate-300 uppercase">FD I:</span>
-                                                    <span class="text-[10px] {{ $feedIdClass }}">{{ $row->feeding_id_value ?? '-' }}</span>
+                                                <div class="flex flex-col gap-0.5">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[8px] font-bold text-slate-500">FD SAMPING:</span>
+                                                        <span class="text-[11px] {{ $feedClass }}">{{ $row->feeding_value }}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="text-[8px] font-bold text-slate-500">FD ID:</span>
+                                                        <span class="text-[11px] {{ $feedIdClass }}">{{ $row->feeding_id_value ?? '-' }}</span>
+                                                    </div>
                                                 </div>
+                                                @if($row->note)
+                                                    <div class="flex items-start gap-1.5 border-l border-slate-200 pl-3">
+                                                        <span class="material-icons-round text-slate-300 text-[14px]">notes</span>
+                                                        <p class="text-[10px] text-slate-500 italic leading-tight">{{ $row->note }}</p>
+                                                    </div>
+                                                @endif
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    @if($row->note)
-                                        <div
-                                            class="flex items-center gap-1 px-2 py-1 bg-blue-50/50 rounded-lg border border-blue-100/30">
-                                            <span class="material-icons-round text-blue-400 text-[12px]">chat_bubble_outline</span>
-                                            <p class="text-[10px] text-slate-500 italic truncate max-w-[150px]">{{ $row->note }}</p>
+                                            {{-- Inline Actions --}}
+                                            @if(!$isLocked && !$isReadOnly)
+                                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <a href="{{ route('daily_report.downtime.edit', $row->id) }}"
+                                                       class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-lg transition-all shadow-sm"
+                                                       title="Edit">
+                                                        <span class="material-icons-round text-sm">edit</span>
+                                                    </a>
+                                                    <form action="{{ route('daily_report.downtime.destroy', $row->id) }}" method="POST" class="delete-form">
+                                                        @csrf @method('DELETE')
+                                                        <button type="button" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-all shadow-sm btn-delete" title="Hapus">
+                                                            <span class="material-icons-round text-sm">delete_outline</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
-                                </div>
-                            @else
-                                <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
-                                    <div class="flex items-center gap-2 text-red-600">
-                                        <span class="material-icons-round text-[14px]">warning</span>
-                                        <span class="font-bold text-xs uppercase tracking-tight">{{ $row->reason }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-3 text-[10px] text-slate-400">
-                                        <div class="flex items-center gap-1 font-medium">
-                                            <span class="material-icons-round text-[12px]">schedule</span>
-                                            <span>{{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }} -
-                                                {{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}</span>
-                                        </div>
-                                        <span class="font-black text-red-500 uppercase">{{ $row->duration_minutes }} min</span>
-                                    </div>
-                                    @if($row->note)
-                                        <div class="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
-                                            <span class="material-icons-round text-slate-300 text-[12px]">notes</span>
-                                            <p class="text-[10px] text-slate-500 italic truncate max-w-[200px]">{{ $row->note }}</p>
-                                        </div>
-                                    @endif
+                                    @endforeach
                                 </div>
                             @endif
-                        </div>
 
-                        {{-- Right: Actions --}}
-                        <div class="flex items-center justify-end lg:w-20 gap-1">
-                            @if(!$isLocked && !auth()->user()->isReadOnly())
-                                <a href="{{ route('daily_report.downtime.edit', $row->id) }}"
-                                   class="w-8 h-8 flex items-center justify-center text-slate-200 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                   title="Edit">
-                                    <span class="material-icons-round text-lg">edit</span>
-                                </a>
+                            {{-- Downtime Entries Section --}}
+                            @if($hasStop)
+                                <div class="space-y-2">
+                                    <h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                        Downtime / Stop
+                                    </h4>
+                                    @foreach($stops as $row)
+                                        <div class="group relative flex flex-wrap items-center gap-4 p-3 bg-red-50/20 border border-red-100/50 rounded-xl hover:bg-red-50/40 transition-all">
+                                            <div class="flex-1 min-w-[200px]">
+                                                <div class="flex items-center gap-2 text-red-600 mb-1">
+                                                    <span class="material-icons-round text-sm">warning</span>
+                                                    <span class="font-bold text-xs uppercase">{{ $row->reason }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-4 text-[10px] text-slate-500">
+                                                    <div class="flex items-center gap-1 font-medium">
+                                                        <span class="material-icons-round text-[12px]">schedule</span>
+                                                        <span>{{ \Carbon\Carbon::parse($row->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($row->end_time)->format('H:i') }}</span>
+                                                    </div>
+                                                    <span class="font-black text-red-500 uppercase">{{ $row->duration_minutes }} min</span>
+                                                    @if($row->note)
+                                                        <span class="text-slate-300">|</span>
+                                                        <span class="italic">{{ $row->note }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
 
-                                <form action="{{ route('daily_report.downtime.destroy', $row->id) }}" method="POST"
-                                    class="inline-block delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button"
-                                        class="w-8 h-8 flex items-center justify-center text-slate-200 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all btn-delete"
-                                        title="Hapus">
-                                        <span class="material-icons-round text-lg">delete_outline</span>
-                                    </button>
-                                </form>
+                                            {{-- Inline Actions --}}
+                                            @if(!$isLocked && !$isReadOnly)
+                                                <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <a href="{{ route('daily_report.downtime.edit', $row->id) }}"
+                                                       class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-blue-600 hover:bg-white rounded-lg transition-all shadow-sm"
+                                                       title="Edit">
+                                                        <span class="material-icons-round text-sm">edit</span>
+                                                    </a>
+                                                    <form action="{{ route('daily_report.downtime.destroy', $row->id) }}" method="POST" class="delete-form">
+                                                        @csrf @method('DELETE')
+                                                        <button type="button" class="w-7 h-7 flex items-center justify-center text-slate-400 hover:text-red-600 hover:bg-white rounded-lg transition-all shadow-sm btn-delete" title="Hapus">
+                                                            <span class="material-icons-round text-sm">delete_outline</span>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                     </div>
