@@ -167,7 +167,10 @@
                         <span style="font-size: 7.5pt; color: #666;">{{ $row->machine_code }}</span>
                     </td>
                     <td class="text-right"><strong>{{ $row->actual_qty }}</strong></td>
-                    <td class="text-right {{ $statusClass }}">{{ $rowMins }}m {{ $rowSecs }}s</td>
+                    <td class="text-right {{ $statusClass }}">
+                        {{ $rowMins }}m {{ $rowSecs }}s<br>
+                        <span style="font-size: 7.5pt; color: #666;">{{ number_format($row->work_hours, 2) }} Jam</span>
+                    </td>
                     <td class="text-center">
                         <span class="{{ $statusClass }}">{{ $statusText }}</span>
                         @if($row->remark)

@@ -66,6 +66,7 @@ class CycleTimeExport implements FromCollection, WithHeadings, WithStyles
                     'operator' => $opName . ' (' . $row->operator_code . ')',
                     'machine' => $machineName,
                     'actual' => $row->actual_qty,
+                    'jam_kerja' => $row->work_hours,
                     'cycle_time' => $cycleTimeDisplay,
                     'status' => $status,
                 ];
@@ -80,6 +81,7 @@ class CycleTimeExport implements FromCollection, WithHeadings, WithStyles
             'Operator',
             'Mesin',
             'Hasil (PCS)',
+            'Jam Kerja',
             'Cycle Time',
             'Status V.S Rata2',
         ];

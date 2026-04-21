@@ -216,6 +216,9 @@
                                 <span class="font-mono font-medium @if($isAnomalyHigh) text-red-600 @elseif($isAnomalyLow) text-amber-600 @else text-gray-700 @endif">
                                     {{ $rowMins }}m {{ $rowSecs }}s
                                 </span>
+                                <div class="text-[10px] text-gray-400 mt-1">
+                                    {{ number_format($row->work_hours, 2) }} Jam
+                                </div>
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @if($isAnomalyHigh)
