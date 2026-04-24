@@ -8,10 +8,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
-    public function operatorKpi()
+    public function operatorKpi(?string $date = null)
     {
-        $startDate = request('start_date', date('Y-m-d'));
-        $endDate = request('end_date', date('Y-m-d'));
+        $startDate = request('start_date', $date ?? date('Y-m-d'));
+        $endDate = request('end_date', $date ?? date('Y-m-d'));
         $operatorCode = request('operator_code');
 
         // Sanitize "all" to null
