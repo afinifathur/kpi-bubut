@@ -195,25 +195,97 @@
                                 style="height: 320px !important; min-height: 320px !important;">{{ old('monitoring_result', $report->monitoring_result) }}</textarea>
                         </div>
 
-                        <div>
+                        <div x-data="{ 
+                            files: [],
+                            addFiles(e) {
+                                const newFiles = Array.from(e.target.files);
+                                this.files = [...this.files, ...newFiles];
+                            },
+                            removeFile(index) {
+                                this.files.splice(index, 1);
+                                const dt = new DataTransfer();
+                                this.files.forEach(file => dt.items.add(file));
+                                $refs.fileInput.files = dt.files;
+                            },
+                            formatSize(bytes) {
+                                if (bytes === 0) return '0 Bytes';
+                                const k = 1024;
+                                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                            }
+                        }">
                             <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Lampiran Bukti (Multiple) <span class="text-gray-400 text-[9px] font-normal">(JPG, PNG, PDF)</span></label>
                             
                             @if($report->evidence_files && count($report->evidence_files) > 0)
-                                <div class="mb-3 grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    @foreach($report->evidence_files as $file)
-                                        <div class="p-2 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-between">
-                                            <span class="text-[10px] text-gray-600 truncate mr-2">{{ $file['name'] }}</span>
-                                            <a href="{{ asset('storage/' . $file['path']) }}" target="_blank" class="text-blue-500 hover:text-blue-700">
-                                                <span class="material-icons-round text-sm">open_in_new</span>
-                                            </a>
-                                        </div>
-                                    @endforeach
+                                <div class="mb-4 space-y-2">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">File Terlampir Saat Ini:</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        @foreach($report->evidence_files as $file)
+                                            <div class="flex items-center justify-between p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+                                                        <span class="material-icons-round text-sm text-blue-500">{{ str_contains($file['name'], '.pdf') ? 'picture_as_pdf' : 'image' }}</span>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-[10px] font-bold text-blue-700 truncate">{{ $file['name'] }}</p>
+                                                        <p class="text-[9px] text-blue-400">File Tersimpan</p>
+                                                    </div>
+                                                </div>
+                                                <a href="{{ asset('storage/' . $file['path']) }}" target="_blank" 
+                                                   class="w-7 h-7 flex items-center justify-center rounded-lg text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-all">
+                                                    <span class="material-icons-round text-sm">open_in_new</span>
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
 
-                            <input type="file" name="evidence_files[]" multiple accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all p-2">
-                            <p class="text-[9px] text-gray-400 mt-1 italic">* Wajib dilampirkan jika ingin menutup laporan (Status Closed).</p>
+                            <!-- Custom Upload Button -->
+                            <div class="relative group">
+                                <input type="file" name="evidence_files[]" multiple accept=".jpg,.jpeg,.png,.pdf"
+                                    x-ref="fileInput"
+                                    @change="addFiles"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                
+                                <div class="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-6 flex flex-col items-center justify-center gap-2 group-hover:border-blue-400 group-hover:bg-blue-50/50 transition-all">
+                                    <div class="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                        <span class="material-icons-round text-2xl">cloud_upload</span>
+                                    </div>
+                                    <div class="text-center">
+                                        <p class="text-[11px] font-bold text-gray-700">Klik atau Tarik File Baru ke Sini</p>
+                                        <p class="text-[9px] text-gray-400 mt-0.5">Maksimal 5MB per file (JPG, PNG, PDF)</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- New Selected Files List -->
+                            <template x-if="files.length > 0">
+                                <div class="mt-3 space-y-2">
+                                    <p class="text-[9px] font-bold text-orange-400 uppercase tracking-widest">File Baru Ditambahkan:</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <template x-for="(file, index) in files" :key="index">
+                                            <div class="flex items-center justify-between p-2.5 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                                <div class="flex items-center gap-2 min-w-0">
+                                                    <div class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                                                        <span class="material-icons-round text-sm text-gray-400" x-text="file.type.includes('pdf') ? 'picture_as_pdf' : 'image'"></span>
+                                                    </div>
+                                                    <div class="min-w-0">
+                                                        <p class="text-[10px] font-bold text-gray-700 truncate" x-text="file.name"></p>
+                                                        <p class="text-[9px] text-gray-400" x-text="formatSize(file.size)"></p>
+                                                    </div>
+                                                </div>
+                                                <button type="button" @click="removeFile(index)" class="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                                                    <span class="material-icons-round text-sm">close</span>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <p class="text-[9px] text-gray-400 mt-2 italic">* Wajib dilampirkan jika ingin menutup laporan (Status Closed).</p>
                         </div>
 
                         <div>
