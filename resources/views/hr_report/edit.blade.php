@@ -189,7 +189,7 @@
                     </div>
                     <div class="p-5 space-y-4">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-red-500">*</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                             <textarea name="monitoring_result" placeholder="Tuliskan hasil pengecekan atau monitoring di lapangan..."
                                 class="w-full min-h-[320px] h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-purple-400 transition-all p-3"
                                 style="height: 320px !important; min-height: 320px !important;">{{ old('monitoring_result', $report->monitoring_result) }}</textarea>
