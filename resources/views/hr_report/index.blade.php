@@ -4,19 +4,20 @@
 
 @section('content')
 
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Laporan HR</h1>
-            <p class="text-gray-500">Monitoring anomali, issue harian, dan tindak lanjut perbaikan.</p>
+    <div class="w-full" style="width: 100%; max-width: none;">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Laporan HR</h1>
+                <p class="text-gray-500">Monitoring anomali, issue harian, dan tindak lanjut perbaikan.</p>
+            </div>
+            @if(auth()->user()->canManageHrReports())
+                <a href="{{ route('hr_report.create') }}" target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 font-bold">
+                    <span class="material-icons-round text-sm">add</span>
+                    Laporan Baru
+                </a>
+            @endif
         </div>
-        @if(auth()->user()->canManageHrReports())
-            <a href="{{ route('hr_report.create') }}" target="_blank"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 font-bold">
-                <span class="material-icons-round text-sm">add</span>
-                Laporan Baru
-            </a>
-        @endif
-    </div>
 
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
         <div class="w-full md:w-1/3">
@@ -50,7 +51,11 @@
                 <span class="material-icons-round text-3xl">assignment_late</span>
             </div>
             <h3 class="text-lg font-bold text-gray-900">Belum ada laporan issue</h3>
-            <p class="text-gray-500 mt-1 max-w-sm mx-auto">Klik tombol "Laporan Baru" untuk mendokumentasikan anomali atau issue yang ditemukan.</p>
+            @if(auth()->user()->canManageHrReports())
+                <p class="text-gray-500 mt-1 max-w-sm mx-auto">Klik tombol "Laporan Baru" untuk mendokumentasikan anomali atau issue yang ditemukan.</p>
+            @else
+                <p class="text-gray-500 mt-1 max-w-sm mx-auto">Belum ada data laporan HR yang tersedia untuk saat ini.</p>
+            @endif
         </div>
     @else
         <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
@@ -99,7 +104,15 @@
                                     <div class="text-xs font-bold text-gray-700">
                                         {{ \Carbon\Carbon::parse($report->report_date)->isoFormat('D MMM YYYY') }}
                                     </div>
-                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                                    @if($report->target_completion_date)
+                                        @php
+                                            $isOverdue = $report->target_completion_date->isPast() && $report->status !== 'Closed';
+                                        @endphp
+                                        <div class="text-[9px] font-bold {{ $isOverdue ? 'text-red-500' : 'text-blue-500' }} uppercase tracking-tight mt-0.5">
+                                            {{ $report->target_completion_date->isoFormat('D MMM YYYY') }}
+                                        </div>
+                                    @endif
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-tight mt-0.5">
                                         {{ $report->creator->name ?? 'System' }}
                                     </div>
                                 </td>
@@ -109,23 +122,39 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{{ $report->title }}</div>
-                                    <div class="text-[10px] font-medium text-gray-400 line-clamp-1 mt-0.5">{{ $report->description }}</div>
+                                    <div class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-blue-600 transition-colors mb-1">
+                                        <a href="{{ route('hr_report.show', $report->id) }}" class="hover:underline">{{ $report->title }}</a>
+                                    </div>
+                                    <div class="text-[10px] font-medium text-gray-400 line-clamp-1 mb-1">{{ $report->description }}</div>
+                                    @if($report->operator_name)
+                                        <div class="text-[9px] font-black text-blue-500 uppercase tracking-tight flex items-center gap-1">
+                                            <span class="material-icons-round text-[11px]">person</span>
+                                            {{ $report->operator_name }}
+                                        </div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @php
-                                        $statusClasses = [
-                                            'Open' => 'bg-red-50 text-red-600 border-red-100',
-                                            'Investigating' => 'bg-orange-50 text-orange-600 border-orange-100',
-                                            'Action Plan' => 'bg-blue-50 text-blue-600 border-blue-100',
-                                            'Monitoring' => 'bg-purple-50 text-purple-600 border-purple-100',
-                                            'Closed' => 'bg-green-50 text-green-600 border-green-100'
-                                        ];
-                                        $class = $statusClasses[$report->status] ?? 'bg-gray-50 text-gray-600 border-gray-100';
-                                    @endphp
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black border {{ $class }} uppercase tracking-widest">
-                                        {{ $report->status }}
-                                    </span>
+                                    <div class="flex flex-col items-center gap-1">
+                                        @php
+                                            $statusClasses = [
+                                                'Open' => 'bg-red-50 text-red-600 border-red-100',
+                                                'Investigating' => 'bg-orange-50 text-orange-600 border-orange-100',
+                                                'Action Plan' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                                'Monitoring' => 'bg-purple-50 text-purple-600 border-purple-100',
+                                                'Closed' => 'bg-green-50 text-green-600 border-green-100'
+                                            ];
+                                            $class = $statusClasses[$report->status] ?? 'bg-gray-50 text-gray-600 border-gray-100';
+                                            $isOverdue = $report->target_completion_date && $report->target_completion_date->isPast() && $report->status !== 'Closed';
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black border {{ $class }} uppercase tracking-widest">
+                                            {{ $report->status }}
+                                        </span>
+                                        @if($isOverdue)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black bg-red-100 text-red-600 border border-red-200 uppercase tracking-widest animate-pulse">
+                                                TELAT
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1">
@@ -141,7 +170,7 @@
                                             title="Detail Laporan">
                                             <span class="material-icons-round text-lg">visibility</span>
                                         </a>
-                                        @if(auth()->user()->canManageHrReports())
+                                        @if(auth()->user()->canManageHrReports() && $report->status !== 'Closed')
                                             <a href="{{ route('hr_report.edit', $report->id) }}"
                                                 class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
                                                 title="Edit Laporan">
@@ -157,5 +186,5 @@
             </div>
         </div>
     @endif
-
+    </div>
 @endsection

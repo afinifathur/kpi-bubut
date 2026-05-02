@@ -124,8 +124,12 @@
         <tr>
             <td class="label">Dilaporkan Oleh</td>
             <td>: {{ $report->creator->name ?? 'System' }}</td>
+            <td class="label">Nama Operator</td>
+            <td>: {{ $report->operator_name ?: '-' }}</td>
+        </tr>
+        <tr>
             <td class="label">Traceable Link</td>
-            <td>: {{ $report->data_link ?: '-' }}</td>
+            <td colspan="3">: {{ $report->data_link ?: '-' }}</td>
         </tr>
     </table>
 
@@ -148,6 +152,62 @@
     <div class="content-box">
         {!! $report->corrective_action ? nl2br(e($report->corrective_action)) : '<i style="color:#94a3b8">Belum ada tindakan perbaikan.</i>' !!}
     </div>
+
+    <table class="metadata-table" style="margin-top: 15px;">
+        <tr>
+            <td class="label">Target Penyelesaian</td>
+            <td>: {{ $report->target_completion_date ? $report->target_completion_date->isoFormat('D MMMM YYYY') : '-' }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Hasil Monitoring</div>
+    <div class="content-box">
+        {!! $report->monitoring_result ? nl2br(e($report->monitoring_result)) : '<i style="color:#94a3b8">Belum ada hasil monitoring.</i>' !!}
+    </div>
+
+    <div class="section-title">Lampiran Bukti</div>
+    <div class="content-box" style="padding: 10px;">
+        @php
+            $images = [];
+            $othersCount = 0;
+            if ($report->evidence_files) {
+                foreach ($report->evidence_files as $file) {
+                    $ext = pathinfo($file['path'], PATHINFO_EXTENSION);
+                    if (in_array(strtolower($ext), ['jpg', 'jpeg', 'png'])) {
+                        $images[] = $file;
+                    } else {
+                        $othersCount++;
+                    }
+                }
+            }
+            $displayImages = array_slice($images, 0, 3);
+            $extraImagesCount = count($images) - count($displayImages);
+        @endphp
+
+        @if(count($displayImages) > 0)
+            <div style="width: 100%;">
+                @foreach($displayImages as $img)
+                    <div style="display: inline-block; width: 30%; margin-right: 2%; margin-bottom: 10px; vertical-align: top;">
+                        <img src="{{ public_path('storage/' . $img['path']) }}" style="width: 100%; height: 120px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                @endforeach
+            </div>
+            @if($extraImagesCount > 0 || $othersCount > 0)
+                <div style="font-size: 8pt; color: #64748b; margin-top: 5px;">
+                    + {{ $extraImagesCount + $othersCount }} lampiran lainnya (lihat di sistem)
+                </div>
+            @endif
+        @else
+            <i style="color:#94a3b8">Tidak ada lampiran bukti visual.</i>
+        @endif
+    </div>
+
+    @if($report->additional_notes)
+        <div class="section-title">Catatan Tambahan</div>
+        <div class="content-box">
+            {!! nl2br(e($report->additional_notes)) !!}
+        </div>
+    @endif
 
     <table class="signatures">
         <tr>

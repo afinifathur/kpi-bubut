@@ -32,7 +32,7 @@
             @includeIf('layouts.topbar')
 
             <main class="flex-1 p-6">
-                <div class="max-w-7xl mx-auto">
+                <div class="w-full">
                     @yield('content')
                 </div>
             </main>

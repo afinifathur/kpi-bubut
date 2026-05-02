@@ -46,16 +46,16 @@ class AutocompleteController extends Controller
     {
         $query = $request->get('q', '');
 
-        if (strlen($query) < 1) {
-            return response()->json([]);
-        }
+        $operatorsQuery = MdOperatorMirror::where('status', 'active');
 
-        $operators = MdOperatorMirror::where('status', 'active')
-            ->where(function ($q) use ($query) {
+        if (strlen($query) >= 1) {
+            $operatorsQuery->where(function ($q) use ($query) {
                 $q->where('code', 'like', "%{$query}%")
                     ->orWhere('name', 'like', "%{$query}%");
-            })
-            ->orderBy('employment_seq') // Prioritaskan urutan kerja jika ada
+            });
+        }
+
+        $operators = $operatorsQuery->orderBy('employment_seq')
             ->limit(20)
             ->get(['code', 'name']);
 
