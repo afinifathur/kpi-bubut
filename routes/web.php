@@ -144,6 +144,10 @@ Route::middleware('auth')->group(function () {
         Route::put('/{id}', [\App\Http\Controllers\HrReportController::class, 'update'])->name('update');
         Route::delete('/{id}', [\App\Http\Controllers\HrReportController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/pdf', [\App\Http\Controllers\HrReportController::class, 'exportPdf'])->name('pdf');
+        Route::post('/{id}/approve', [\App\Http\Controllers\HrReportController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\HrReportController::class, 'reject'])->name('reject');
+        Route::post('/{id}/submit', [\App\Http\Controllers\HrReportController::class, 'submitForApproval'])->name('submit');
+        Route::patch('/{id}/status', [\App\Http\Controllers\HrReportController::class, 'updateStatus'])->name('update_status');
     });
 
     /*

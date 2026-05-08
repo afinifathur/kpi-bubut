@@ -19,36 +19,21 @@
             </div>
         </div>
 
-        <form action="{{ route('hr_report.update', $report->id) }}" method="POST" enctype="multipart/form-data" id="editReportForm" onsubmit="return handleEditSubmit(event, this)">
+        <form action="{{ route('hr_report.update', $report->id) }}" method="POST" enctype="multipart/form-data" id="editReportForm">
             @csrf
             @method('PUT')
 
-            <script>
-                function handleEditSubmit(event, form) {
-                    const status = form.querySelector('select[name="status"]').value;
-                    
-                    if (status === 'Closed') {
-                        event.preventDefault();
-                        Swal.fire({
-                            title: 'Closed laporan ini?',
-                            text: "Laporan yang sudah close tidak bisa diedit kembali!",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#10b981',
-                            cancelButtonColor: '#6b7280',
-                            confirmButtonText: 'Ya, lanjutkan',
-                            cancelButtonText: 'Tidak',
-                            reverseButtons: true
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                form.submit();
-                            }
-                        });
-                        return false;
-                    }
-                    return true;
-                }
-            </script>
+            <!-- INFO ALERT: Workflow Management -->
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                    <span class="material-icons-round">info</span>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-blue-800 uppercase tracking-tight">Manajemen Status Dinonaktifkan</p>
+                    <p class="text-[10px] text-blue-600 leading-tight">Progress laporan dan pengajuan workflow dikelola langsung melalui halaman <b>Detail Laporan</b>.</p>
+                </div>
+            </div>
+
             
             <div class="space-y-3">
                 
@@ -74,13 +59,14 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-blue-500">Update Status</label>
-                                <select name="status" required
-                                    class="w-full bg-blue-50 border-blue-100 rounded-xl text-[11px] font-black text-blue-600 focus:ring-0 h-10 px-3 cursor-pointer">
-                                    @foreach(['Open' => '🔴 OPEN', 'Investigating' => '🟠 INVESTIGATING', 'Action Plan' => '🔵 ACTION PLAN', 'Monitoring' => '🟣 MONITORING', 'Closed' => '🟢 CLOSED'] as $val => $label)
-                                        <option value="{{ $val }}" {{ $report->status == $val ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-blue-500">Status Saat Ini</label>
+                                <div class="bg-blue-50 border border-blue-100 rounded-xl p-2.5 flex items-center gap-2">
+                                    @php
+                                        $statusIcons = ['Open' => '🔴', 'Investigating' => '🟠', 'Action Plan' => '🔵', 'Monitoring' => '🟣', 'Closed' => '🟢'];
+                                    @endphp
+                                    <p class="text-[11px] font-black text-blue-600 uppercase">{{ ($statusIcons[$report->status] ?? '') . ' ' . $report->status }}</p>
+                                    <input type="hidden" name="status" value="{{ $report->status }}">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -95,7 +81,7 @@
                     <div class="p-5 space-y-4">
                         <div class="flex gap-4 w-full items-start">
                             <div class="w-64 shrink-0">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Kategori Masalah <span class="text-red-500">*</span></label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Kategori Masalah <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <select name="category" required x-model="category"
                                      class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                                      @foreach(['Cycle Time', 'KPI Operator', 'Downtime Mesin', 'Quality / Scrap', 'Disiplin Operator', 'Maintenance', 'Lainnya'] as $cat)
@@ -104,7 +90,7 @@
                                  </select>
                             </div>
                             <div class="w-64 shrink-0 relative" @click.outside="showOperatorSuggestions = false">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Nama Operator</label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Nama Operator <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <div class="relative">
                                     <input type="text" x-model="operatorSearch" @input.debounce.300ms="searchOperators"
                                         @focus="searchOperators"
@@ -127,22 +113,22 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Judul Laporan <span class="text-red-500">*</span></label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Judul Laporan <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <input type="text" name="title" x-model="title" required placeholder="Misal: Penurunan KPI Signifikan Shift 1"
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Deskripsi Masalah <span class="text-red-500">*</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Deskripsi Masalah <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                             <textarea name="description" required rows="3" placeholder="Jelaskan detail anomali yang Anda temukan..."
                                 class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all p-3">{{ $report->description }}</textarea>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Link Bukti Data (Traceable URL)</label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Link Bukti Data (Traceable URL) <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                             <div class="relative">
-                                <input type="url" name="data_link" value="{{ $report->data_link }}" placeholder="http://10.88.8.97/kpi-bubut/public/daily-report/operator/show/..."
+                                <input type="url" name="data_link" required value="{{ $report->data_link }}" placeholder="http://10.88.8.97/kpi-bubut/public/daily-report/operator/show/..."
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 pl-10 focus:border-blue-400 transition-all h-10 px-3">
                                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">link</span>
                             </div>
@@ -159,14 +145,14 @@
                     <div class="p-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-tighter">Penyebab Masalah (Root Cause)</label>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-tighter">Penyebab Masalah (Root Cause) <span class="text-gray-400 text-[9px] font-normal lowercase ml-1">(wajib sebelum Submit)</span></label>
                                 <textarea name="root_cause" rows="12" placeholder="Faktor penyebab utama..."
                                     class="w-full h-[320px] min-h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-orange-400 transition-all p-3"
                                     style="height: 320px !important; min-height: 320px !important;">{{ old('root_cause', $report->root_cause) }}</textarea>
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-green-600 mb-1.5 uppercase tracking-tighter">Tindakan Perbaikan (Corrective Action)</label>
+                                <label class="block text-[10px] font-bold text-green-600 mb-1.5 uppercase tracking-tighter">Tindakan Perbaikan (Corrective Action) <span class="text-gray-400 text-[9px] font-normal lowercase ml-1">(wajib sebelum Submit)</span></label>
                                 <textarea name="corrective_action" rows="12" placeholder="Langkah perbaikan..."
                                     class="w-full h-[320px] min-h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-green-400 transition-all p-3"
                                     style="height: 320px !important; min-height: 320px !important;">{{ old('corrective_action', $report->corrective_action) }}</textarea>
@@ -174,8 +160,8 @@
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Target Penyelesaian <span class="text-red-500">*</span></label>
-                            <input type="date" name="target_completion_date" required value="{{ old('target_completion_date', $report->target_completion_date ? $report->target_completion_date->format('Y-m-d') : '') }}"
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Target Penyelesaian <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
+                            <input type="date" name="target_completion_date" value="{{ old('target_completion_date', $report->target_completion_date ? $report->target_completion_date->format('Y-m-d') : '') }}"
                                 class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                         </div>
                     </div>
@@ -189,7 +175,7 @@
                     </div>
                     <div class="p-5 space-y-4">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
                             <textarea name="monitoring_result" placeholder="Tuliskan hasil pengecekan atau monitoring di lapangan..."
                                 class="w-full min-h-[320px] h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-purple-400 transition-all p-3"
                                 style="height: 320px !important; min-height: 320px !important;">{{ old('monitoring_result', $report->monitoring_result) }}</textarea>
@@ -197,6 +183,7 @@
 
                         <div x-data="{ 
                             files: [],
+                            removedFiles: [],
                             addFiles(e) {
                                 const newFiles = Array.from(e.target.files);
                                 this.files = [...this.files, ...newFiles];
@@ -207,6 +194,13 @@
                                 this.files.forEach(file => dt.items.add(file));
                                 $refs.fileInput.files = dt.files;
                             },
+                            toggleRemoveExisting(path) {
+                                if (this.removedFiles.includes(path)) {
+                                    this.removedFiles = this.removedFiles.filter(p => p !== path);
+                                } else {
+                                    this.removedFiles.push(path);
+                                }
+                            },
                             formatSize(bytes) {
                                 if (bytes === 0) return '0 Bytes';
                                 const k = 1024;
@@ -215,27 +209,39 @@
                                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
                             }
                         }">
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Lampiran Bukti (Multiple) <span class="text-gray-400 text-[9px] font-normal">(JPG, PNG, PDF)</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Lampiran Bukti (Multiple) <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
                             
                             @if($report->evidence_files && count($report->evidence_files) > 0)
                                 <div class="mb-4 space-y-2">
                                     <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">File Terlampir Saat Ini:</p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         @foreach($report->evidence_files as $file)
-                                            <div class="flex items-center justify-between p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl">
-                                                <div class="flex items-center gap-2 min-w-0">
-                                                    <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
-                                                        <span class="material-icons-round text-sm text-blue-500">{{ str_contains($file['name'], '.pdf') ? 'picture_as_pdf' : 'image' }}</span>
+                                            <div class="relative group" :class="removedFiles.includes('{{ $file['path'] }}') ? 'opacity-40 grayscale' : ''">
+                                                <div class="flex items-center justify-between p-2.5 bg-blue-50/50 border border-blue-100 rounded-xl transition-all">
+                                                    <div class="flex items-center gap-2 min-w-0">
+                                                        <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+                                                            <span class="material-icons-round text-sm text-blue-500">{{ str_contains($file['name'], '.pdf') ? 'picture_as_pdf' : 'image' }}</span>
+                                                        </div>
+                                                        <div class="min-w-0">
+                                                            <p class="text-[10px] font-bold text-blue-700 truncate">{{ $file['name'] }}</p>
+                                                            <p class="text-[9px] text-blue-400">File Tersimpan</p>
+                                                        </div>
                                                     </div>
-                                                    <div class="min-w-0">
-                                                        <p class="text-[10px] font-bold text-blue-700 truncate">{{ $file['name'] }}</p>
-                                                        <p class="text-[9px] text-blue-400">File Tersimpan</p>
+                                                    <div class="flex items-center gap-1">
+                                                        <a href="{{ asset('storage/' . $file['path']) }}" target="_blank" 
+                                                           class="w-7 h-7 flex items-center justify-center rounded-lg text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-all">
+                                                            <span class="material-icons-round text-sm">open_in_new</span>
+                                                        </a>
+                                                        <button type="button" @click="toggleRemoveExisting('{{ $file['path'] }}')"
+                                                           class="w-7 h-7 flex items-center justify-center rounded-lg transition-all"
+                                                           :class="removedFiles.includes('{{ $file['path'] }}') ? 'text-green-500 bg-green-50' : 'text-red-400 hover:text-red-600 hover:bg-red-50'">
+                                                            <span class="material-icons-round text-sm" x-text="removedFiles.includes('{{ $file['path'] }}') ? 'restore' : 'delete'"></span>
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                <a href="{{ asset('storage/' . $file['path']) }}" target="_blank" 
-                                                   class="w-7 h-7 flex items-center justify-center rounded-lg text-blue-400 hover:text-blue-600 hover:bg-blue-100 transition-all">
-                                                    <span class="material-icons-round text-sm">open_in_new</span>
-                                                </a>
+                                                <template x-if="removedFiles.includes('{{ $file['path'] }}')">
+                                                    <input type="hidden" name="remove_existing_files[]" value="{{ $file['path'] }}">
+                                                </template>
                                             </div>
                                         @endforeach
                                     </div>
@@ -285,7 +291,7 @@
                                 </div>
                             </template>
 
-                            <p class="text-[9px] text-gray-400 mt-2 italic">* Wajib dilampirkan jika ingin menutup laporan (Status Closed).</p>
+                            <p class="text-[9px] text-gray-400 mt-2 italic">* Wajib dilampirkan sebelum mengajukan approval (Status Closed terjadi saat Approve Manager).</p>
                         </div>
 
                         <div>

@@ -10,7 +10,7 @@
                 <h1 class="text-2xl font-bold text-gray-800">Laporan HR</h1>
                 <p class="text-gray-500">Monitoring anomali, issue harian, dan tindak lanjut perbaikan.</p>
             </div>
-            @if(auth()->user()->canManageHrReports())
+            @if(auth()->user()->isHrAdmin())
                 <a href="{{ route('hr_report.create') }}" target="_blank"
                     class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 font-bold">
                     <span class="material-icons-round text-sm">add</span>
@@ -149,6 +149,27 @@
                                         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-black border {{ $class }} uppercase tracking-widest">
                                             {{ $report->status }}
                                         </span>
+                                        @php
+                                            $appBadgeClasses = [
+                                                'draft' => 'bg-gray-100 text-gray-400 border-gray-200',
+                                                'pending' => 'bg-gray-100 text-gray-400 border-gray-200',
+                                                'submitted' => 'bg-blue-100 text-blue-700 border-blue-200',
+                                                'approved' => 'bg-green-100 text-green-700 border-green-200',
+                                                'rejected' => 'bg-red-100 text-red-700 border-red-200'
+                                            ];
+                                            $appLabels = [
+                                                'draft' => 'Draft',
+                                                'pending' => 'Draft',
+                                                'submitted' => 'Waiting Approval',
+                                                'approved' => 'Approved',
+                                                'rejected' => 'Rejected'
+                                            ];
+                                            $appClass = $appBadgeClasses[$report->approval_status] ?? 'bg-gray-100 text-gray-400 border-gray-200';
+                                            $appLabel = $appLabels[$report->approval_status] ?? strtoupper($report->approval_status);
+                                        @endphp
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black border {{ $appClass }} uppercase tracking-widest">
+                                            {{ $appLabel }}
+                                        </span>
                                         @if($isOverdue)
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black bg-red-100 text-red-600 border border-red-200 uppercase tracking-widest animate-pulse">
                                                 TELAT
@@ -170,7 +191,11 @@
                                             title="Detail Laporan">
                                             <span class="material-icons-round text-lg">visibility</span>
                                         </a>
-                                        @if(auth()->user()->canManageHrReports() && $report->status !== 'Closed')
+                                        @php
+                                            $isSubmittedOrApproved = in_array($report->approval_status, ['submitted', 'approved']);
+                                            $canEdit = auth()->user()->isHrAdmin() && !$isSubmittedOrApproved;
+                                        @endphp
+                                        @if($canEdit)
                                             <a href="{{ route('hr_report.edit', $report->id) }}"
                                                 class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all"
                                                 title="Edit Laporan">

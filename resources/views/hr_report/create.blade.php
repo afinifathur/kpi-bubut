@@ -33,10 +33,9 @@
                     <div class="p-5">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">ID Laporan</label>
+                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Preview Number <span class="text-blue-500">(final dibuat saat simpan)</span></label>
                                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-2.5">
                                     <p class="text-[11px] font-mono font-bold text-blue-700">{{ $reportNumber }}</p>
-                                    <input type="hidden" name="report_number" value="{{ $reportNumber }}">
                                 </div>
                             </div>
                             <div>
@@ -44,19 +43,13 @@
                                 <div class="bg-gray-50 border border-gray-100 rounded-xl p-2.5 flex items-center gap-2">
                                     <span class="material-icons-round text-gray-400 text-sm">calendar_today</span>
                                     <p class="text-[11px] font-bold text-gray-700">{{ \Carbon\Carbon::parse($today)->isoFormat('dddd, D MMM YYYY') }}</p>
-                                    <input type="hidden" name="report_date" value="{{ $today }}">
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-red-500">Status Awal</label>
-                                <select name="status" required
-                                    class="w-full bg-red-50 border-red-100 rounded-xl text-[11px] font-black text-red-600 focus:ring-0 h-10 px-3 cursor-pointer">
-                                    <option value="Open">🔴 OPEN</option>
-                                    <option value="Investigating">🟠 INVESTIGATING</option>
-                                    <option value="Action Plan">🔵 ACTION PLAN</option>
-                                    <option value="Monitoring">🟣 MONITORING</option>
-                                    <option value="Closed">🟢 CLOSED</option>
-                                </select>
+                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-blue-500">Status Awal</label>
+                                <div class="w-full bg-blue-50 border border-blue-100 rounded-xl px-4 h-10 flex items-center">
+                                    <span class="text-[11px] font-black text-blue-600 uppercase tracking-widest">🔵 OPEN</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -71,7 +64,7 @@
                     <div class="p-5 space-y-4">
                         <div class="flex gap-4 w-full items-start">
                             <div class="w-64 shrink-0">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Kategori Masalah <span class="text-red-500">*</span></label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Kategori Masalah <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <select name="category" required x-model="category"
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                                     <option value="" disabled selected>Pilih Kategori</option>
@@ -85,7 +78,7 @@
                                 </select>
                             </div>
                             <div class="w-64 shrink-0 relative" @click.outside="showOperatorSuggestions = false">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Nama Operator</label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Nama Operator <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <div class="relative">
                                     <input type="text" x-model="operatorSearch" @input.debounce.300ms="searchOperators"
                                         @focus="searchOperators"
@@ -108,22 +101,22 @@
                                 </div>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Judul Laporan <span class="text-red-500">*</span></label>
+                                <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Judul Laporan <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                                 <input type="text" name="title" required x-model="title" placeholder="Misal: Penurunan KPI Signifikan Shift 1"
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Deskripsi Masalah <span class="text-red-500">*</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Deskripsi Masalah <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                             <textarea name="description" required rows="3" placeholder="Jelaskan detail anomali yang Anda temukan..."
                                 class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all p-3"></textarea>
                         </div>
 
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Link Bukti Data (Traceable URL)</label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Link Bukti Data (Traceable URL) <span class="text-red-500">*</span> <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
                             <div class="relative">
-                                <input type="url" name="data_link" placeholder="http://10.88.8.97/kpi-bubut/public/daily-report/operator/show/..."
+                                <input type="url" name="data_link" required placeholder="http://10.88.8.97/kpi-bubut/public/daily-report/operator/show/..."
                                     class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 pl-10 focus:border-blue-400 transition-all h-10 px-3">
                                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">link</span>
                             </div>
@@ -140,14 +133,14 @@
                     <div class="p-5">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-tighter">Penyebab Masalah (Root Cause)</label>
+                                <label class="block text-[10px] font-bold text-gray-500 mb-1.5 uppercase tracking-tighter">Penyebab Masalah (Root Cause) <span class="text-gray-400 text-[9px] font-normal lowercase ml-1">(wajib sebelum Submit)</span></label>
                                 <textarea name="root_cause" rows="12" placeholder="Faktor penyebab utama..."
                                     class="w-full h-[320px] min-h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-orange-400 transition-all p-3"
                                     style="height: 320px !important; min-height: 320px !important;">{{ old('root_cause') }}</textarea>
                             </div>
 
                             <div>
-                                <label class="block text-[10px] font-bold text-green-600 mb-1.5 uppercase tracking-tighter">Tindakan Perbaikan (Corrective Action)</label>
+                                <label class="block text-[10px] font-bold text-green-600 mb-1.5 uppercase tracking-tighter">Tindakan Perbaikan (Corrective Action) <span class="text-gray-400 text-[9px] font-normal lowercase ml-1">(wajib sebelum Submit)</span></label>
                                 <textarea name="corrective_action" rows="12" placeholder="Langkah perbaikan..."
                                     class="w-full h-[320px] min-h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-green-400 transition-all p-3"
                                     style="height: 320px !important; min-height: 320px !important;">{{ old('corrective_action') }}</textarea>
@@ -155,8 +148,8 @@
                         </div>
 
                         <div class="mt-4">
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Target Penyelesaian <span class="text-red-500">*</span></label>
-                            <input type="date" name="target_completion_date" required value="{{ old('target_completion_date') }}"
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Target Penyelesaian <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
+                            <input type="date" name="target_completion_date" value="{{ old('target_completion_date') }}"
                                 class="w-full bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-blue-400 transition-all h-10 px-3">
                         </div>
                     </div>
@@ -170,7 +163,7 @@
                     </div>
                     <div class="p-5 space-y-4">
                         <div>
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib diisi)</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Hasil Monitoring <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
                             <textarea name="monitoring_result" placeholder="Tuliskan hasil pengecekan atau monitoring di lapangan..."
                                 class="w-full min-h-[320px] h-[320px] resize-y bg-gray-50 border-gray-200 rounded-xl text-xs font-medium text-gray-700 focus:border-purple-400 transition-all p-3"
                                 style="height: 320px !important; min-height: 320px !important;">{{ old('monitoring_result') }}</textarea>
@@ -202,7 +195,7 @@
                                 return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
                             }
                         }">
-                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Lampiran Bukti (Multiple) <span class="text-gray-400 text-[9px] font-normal">(JPG, PNG, PDF)</span></label>
+                            <label class="block text-[10px] font-bold text-gray-700 mb-1.5">Lampiran Bukti (Multiple) <span class="text-gray-400 text-[9px] font-normal ml-1">(wajib sebelum Submit)</span></label>
                             
                             <!-- Custom Upload Button -->
                             <div class="relative group">
@@ -244,7 +237,7 @@
                                 </div>
                             </template>
 
-                            <p class="text-[9px] text-gray-400 mt-2 italic">* Wajib dilampirkan jika ingin menutup laporan (Status Closed).</p>
+                            <p class="text-[9px] text-gray-400 mt-2 italic">* Wajib dilampirkan sebelum mengajukan approval (Status Closed terjadi saat Approve).</p>
                         </div>
 
                         <div>

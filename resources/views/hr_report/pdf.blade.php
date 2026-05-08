@@ -76,13 +76,35 @@
         .status-Closed { background-color: #10b981; }
 
         .signatures {
-            margin-top: 50px;
+            margin-top: 40px;
             width: 100%;
+            border-collapse: collapse;
         }
         .signatures td {
             text-align: center;
             width: 50%;
-            padding-top: 60px;
+            vertical-align: bottom;
+            padding: 10px;
+        }
+        .signature-box {
+            height: 80px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .signature-img {
+            max-height: 80px;
+            max-width: 180px;
+        }
+        .signature-placeholder {
+            padding-top: 40px;
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 8pt;
+        }
+        .signature-info {
+            font-size: 8pt;
+            color: #64748b;
+            margin-top: 2px;
         }
         .footer {
             position: fixed;
@@ -94,9 +116,34 @@
             border-top: 1px solid #e2e8f0;
             padding-top: 5px;
         }
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80pt;
+            color: rgba(220, 38, 38, 0.1);
+            z-index: -1000;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .approval-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .badge-pending { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .badge-approved { background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+        .badge-rejected { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
     </style>
 </head>
 <body>
+    @if($isDraft)
+        <div class="watermark">DRAFT</div>
+    @endif
     <div class="header">
         <table>
             <tr>
@@ -209,17 +256,63 @@
         </div>
     @endif
 
+    <div class="section-title">Informasi Approval</div>
+    <table class="metadata-table">
+        <tr>
+            <td class="label">Status Approval</td>
+            <td>
+                <span class="approval-badge badge-{{ $report->approval_status }}">
+                    {{ strtoupper($report->approval_status) }}
+                </span>
+            </td>
+            <td class="label">Disetujui Oleh</td>
+            <td>: {{ $report->approver->name ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="label">Tanggal Approval</td>
+            <td>: {{ $report->approved_at ? $report->approved_at->isoFormat('D MMM YYYY, HH:mm') : '-' }}</td>
+            <td class="label">Catatan Approval</td>
+            <td>: {{ $report->approval_note ?: '-' }}</td>
+        </tr>
+    </table>
+
     <table class="signatures">
         <tr>
             <td>
-                Dibuat Oleh,<br><br><br>
-                ( ....................... )<br>
-                Admin HR
+                <div style="margin-bottom: 5px; font-weight: bold; color: #334155;">Admin HR (Submitter)</div>
+                <div class="signature-box">
+                    @if($report->submitter && $report->submitter->signature_path && file_exists(public_path('storage/' . $report->submitter->signature_path)))
+                        <img src="{{ public_path('storage/' . $report->submitter->signature_path) }}" class="signature-img">
+                    @else
+                        <div class="signature-placeholder">(Signature not available)</div>
+                    @endif
+                </div>
+                <div style="border-top: 1px solid #334155; padding-top: 5px; margin: 0 40px;">
+                    <strong>{{ $report->submitter->name ?? ($report->creator->name ?? '.................') }}</strong>
+                </div>
+                <div class="signature-info">
+                    Submitted: {{ $report->submitted_at ? $report->submitted_at->isoFormat('D MMM YYYY, HH:mm') : '-' }}
+                </div>
             </td>
             <td>
-                Diperiksa Oleh,<br><br><br>
-                ( ....................... )<br>
-                Manager
+                <div style="margin-bottom: 5px; font-weight: bold; color: #334155;">Manager HR (Approver)</div>
+                <div class="signature-box">
+                    @if($report->approval_status === 'approved')
+                        @if($report->approver && $report->approver->signature_path && file_exists(public_path('storage/' . $report->approver->signature_path)))
+                            <img src="{{ public_path('storage/' . $report->approver->signature_path) }}" class="signature-img">
+                        @else
+                            <div class="signature-placeholder">(Signature not available)</div>
+                        @endif
+                    @else
+                        <div class="signature-placeholder" style="color: #ef4444; font-weight: bold;">WAITING APPROVAL</div>
+                    @endif
+                </div>
+                <div style="border-top: 1px solid #334155; padding-top: 5px; margin: 0 40px;">
+                    <strong>{{ $report->approver->name ?? '.................' }}</strong>
+                </div>
+                <div class="signature-info">
+                    Approved: {{ $report->approved_at ? $report->approved_at->isoFormat('D MMM YYYY, HH:mm') : '-' }}
+                </div>
             </td>
         </tr>
     </table>

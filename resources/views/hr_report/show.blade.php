@@ -7,36 +7,158 @@
     <div class="w-full" style="width: 100%; max-width: none;">
         <div class="flex items-center justify-between mb-8">
             <div class="flex items-center gap-3">
-                <a href="{{ route('hr_report.index') }}" class="p-2 bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 hover:text-blue-600 transition-all">
-                    <span class="material-icons-round leading-none">arrow_back</span>
+                <a href="{{ route('hr_report.index') }}" 
+                   title="Kembali ke daftar laporan"
+                   class="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm border border-gray-100 text-gray-400 hover:text-blue-600 transition-all">
+                    <span class="material-icons-round">arrow_back</span>
                 </a>
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Detail Laporan HR</h1>
-                    <p class="text-sm text-gray-400 font-mono">{{ $report->report_number }}</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
+
                 <a href="{{ route('hr_report.pdf', $report->id) }}" target="_blank"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold text-sm shadow-lg shadow-blue-500/20">
+                    class="h-10 inline-flex items-center gap-2 px-5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold text-sm shadow-lg shadow-blue-500/20">
                     <span class="material-icons-round text-sm">picture_as_pdf</span>
                     Download PDF
                 </a>
-                @if(auth()->user()->canManageHrReports() && $report->status !== 'Closed')
+
+                @php
+                    $isSubmittedOrApproved = in_array($report->approval_status, ['submitted', 'approved']);
+                    $canEdit = auth()->user()->isHrAdmin() && !$isSubmittedOrApproved;
+                    $canDelete = auth()->user()->isHrAdmin() && !$isSubmittedOrApproved && $report->status !== 'Closed';
+                @endphp
+
+                @if($canEdit)
                     <a href="{{ route('hr_report.edit', $report->id) }}"
-                        class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm">
+                        class="h-10 inline-flex items-center gap-2 px-5 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-all font-bold text-sm">
                         <span class="material-icons-round text-sm">edit</span>
                         Edit
                     </a>
+                @endif
+
+                @if($canDelete)
                     <form action="{{ route('hr_report.destroy', $report->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus laporan ini?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="p-2 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
-                            <span class="material-icons-round leading-none">delete</span>
+                        <button type="submit" class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all border border-red-100">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                    </form>
+                @endif
+            </div>
+
+            <div class="text-right">
+                <p class="text-[9px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">ID Laporan</p>
+                <p class="text-xs font-mono font-bold text-gray-700">{{ $report->report_number }}</p>
+            </div>
+        </div>
+
+        @php
+            // Logic for status and approval styling
+            $statusClasses = [
+                'Open' => 'bg-red-50 text-red-600 border-red-200',
+                'Investigating' => 'bg-orange-50 text-orange-600 border-orange-200',
+                'Action Plan' => 'bg-blue-50 text-blue-600 border-blue-200',
+                'Monitoring' => 'bg-purple-50 text-purple-600 border-purple-200',
+                'Closed' => 'bg-green-50 text-green-600 border-green-200'
+            ];
+            $class = $statusClasses[$report->status] ?? 'bg-gray-100 text-gray-600 border-gray-200';
+
+            $approvalClasses = [
+                'draft' => 'bg-gray-50 text-gray-400 border-gray-200',
+                'submitted' => 'bg-blue-50 text-blue-500 border-blue-100',
+                'approved' => 'bg-green-50 text-green-700 border-green-100',
+                'rejected' => 'bg-red-50 text-red-700 border-red-100'
+            ];
+            $approvalLabels = [
+                'draft' => 'Draft',
+                'submitted' => 'Waiting Approval',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected'
+            ];
+            $approvalIcons = [
+                'draft' => 'edit_note',
+                'submitted' => 'send',
+                'approved' => 'verified',
+                'rejected' => 'cancel'
+            ];
+            $appClass = $approvalClasses[$report->approval_status] ?? 'bg-gray-100 text-gray-500 border-gray-200';
+            $appLabel = $approvalLabels[$report->approval_status] ?? strtoupper($report->approval_status);
+            $appIcon = $approvalIcons[$report->approval_status] ?? 'info';
+
+            // Readiness check for Submit button
+            $isComplete = $report->root_cause && 
+                          $report->corrective_action && 
+                          $report->target_completion_date && 
+                          $report->monitoring_result && 
+                          ($report->evidence_files && count($report->evidence_files) > 0);
+            
+            $canUpdateStatus = auth()->user()->isHrAdmin() && 
+                              !in_array($report->approval_status, ['submitted', 'approved']);
+        @endphp
+
+        <!-- WORKFLOW BAR: FINAL REFINED -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-stretch gap-0 mb-2 min-h-[95px] overflow-hidden">
+            <!-- Section 1: Progress -->
+            <div class="flex-1 px-6 py-4 border-r border-gray-50 flex flex-col justify-center gap-2">
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Progress</span>
+                <div class="inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black border {{ $class }} uppercase tracking-widest pulse-animation shadow-sm">
+                    {{ $report->status }}
+                </div>
+            </div>
+
+            <!-- Section 2: Approval -->
+            <div class="flex-1 px-6 py-4 border-r border-gray-50 flex flex-col justify-center gap-2">
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Approval</span>
+                <div class="inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black border {{ $appClass }} uppercase tracking-widest shadow-sm">
+                    <span class="material-icons-round text-sm mr-2">{{ $appIcon }}</span>
+                    {{ $appLabel }}
+                </div>
+            </div>
+
+            <!-- Section 3: Action -->
+            <div class="flex-1 px-6 py-4 border-r border-gray-50 flex flex-col justify-center gap-2">
+                <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Action</span>
+                @if($canUpdateStatus)
+                    <form action="{{ route('hr_report.update_status', $report->id) }}" method="POST" class="flex items-center gap-2">
+                        @csrf
+                        @method('PATCH')
+                        <select name="status" class="h-10 bg-gray-50 border-gray-100 rounded-xl text-[10px] font-bold uppercase tracking-widest text-gray-700 focus:ring-blue-500 focus:border-blue-400 px-3 cursor-pointer transition-all">
+                            @foreach(['Open', 'Investigating', 'Action Plan', 'Monitoring'] as $st)
+                                <option value="{{ $st }}" {{ $report->status == $st ? 'selected' : '' }}>{{ strtoupper($st) }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20">
+                            <span class="material-icons-round text-sm">sync</span>
+                            Update
+                        </button>
+                    </form>
+                @else
+                    <div class="h-10 flex items-center text-gray-400 italic text-[10px]">
+                        <span class="material-icons-round text-xs mr-1">lock</span> Laporan Terkunci
+                    </div>
+                @endif
+            </div>
+
+            <!-- Section 4: Submit Review -->
+            <div class="flex-1 px-6 py-4 flex flex-col justify-center">
+                @if(auth()->user()->isHrAdmin() && in_array($report->approval_status, ['draft', 'rejected']))
+                    <form action="{{ route('hr_report.submit', $report->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" @if(!$isComplete) disabled @endif 
+                            class="w-full h-11 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 {{ $isComplete ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20' : 'bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200' }}">
+                            <span class="material-icons-round text-sm">{{ $isComplete ? 'send' : 'lock' }}</span>
+                            Submit Review
                         </button>
                     </form>
                 @endif
             </div>
         </div>
+
+        <!-- Helper text -->
+        @if(!$isComplete && auth()->user()->isHrAdmin() && in_array($report->approval_status, ['draft', 'rejected']))
+            <div class="flex items-center gap-2 text-red-500 px-4 mb-8">
+                <span class="material-icons-round text-sm">warning</span>
+                <span class="text-[9px] font-black uppercase tracking-widest">Complete analysis, monitoring, and evidence before submit.</span>
+            </div>
+        @endif
 
         <div class="space-y-6">
             <!-- Case Info Card -->
@@ -98,52 +220,74 @@
                                 </div>
                             @endif
 
-                            <div>
-                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Status Laporan</label>
-                                <div class="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between">
-                                    @php
-                                        $statusClasses = [
-                                            'Open' => 'bg-red-100 text-red-600 border-red-200',
-                                            'Investigating' => 'bg-orange-100 text-orange-600 border-orange-200',
-                                            'Action Plan' => 'bg-blue-100 text-blue-600 border-blue-200',
-                                            'Monitoring' => 'bg-purple-100 text-purple-600 border-purple-200',
-                                            'Closed' => 'bg-green-100 text-green-600 border-green-200'
-                                        ];
-                                        $class = $statusClasses[$report->status] ?? 'bg-gray-100 text-gray-600 border-gray-200';
-                                    @endphp
-                                    <div class="inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black border {{ $class }} uppercase tracking-widest pulse-animation">
-                                        {{ $report->status }}
-                                    </div>
-
-                                    @if(auth()->user()->canManageHrReports() && $report->status !== 'Closed')
-                                        <form id="statusUpdateForm" action="{{ route('hr_report.update', $report->id) }}" method="POST" class="flex-1 ml-6">
-                                            @csrf
-                                            @method('PUT')
-                                            <input type="hidden" name="category" value="{{ $report->category }}">
-                                            <input type="hidden" name="title" value="{{ $report->title }}">
-                                            <input type="hidden" name="operator_name" value="{{ $report->operator_name }}">
-                                            <input type="hidden" name="description" value="{{ $report->description }}">
-                                            <input type="hidden" name="data_link" value="{{ $report->data_link }}">
-                                            <input type="hidden" name="root_cause" value="{{ $report->root_cause }}">
-                                            <input type="hidden" name="corrective_action" value="{{ $report->corrective_action }}">
-                                            <input type="hidden" name="target_completion_date" value="{{ $report->target_completion_date ? $report->target_completion_date->format('Y-m-d') : '' }}">
-                                            <input type="hidden" name="monitoring_result" value="{{ $report->monitoring_result }}">
-                                            <input type="hidden" name="additional_notes" value="{{ $report->additional_notes }}">
-                                            
-                                            <select name="status" onchange="handleStatusChange(this)" 
-                                                class="w-full bg-gray-50 border-gray-100 rounded-xl text-[10px] font-bold text-gray-500 focus:ring-blue-500 transition-all cursor-pointer">
-                                                @foreach(['Open', 'Investigating', 'Action Plan', 'Monitoring', 'Closed'] as $st)
-                                                    <option value="{{ $st }}" {{ $report->status == $st ? 'selected' : '' }}>Set Status: {{ $st }}</option>
-                                                @endforeach
-                                            </select>
-                                        </form>
-                                    @endif
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Approval Management Panel (Manager Only) -->
+            @if(auth()->user()->isHrManager() && $report->approval_status === 'submitted')
+                <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 border border-gray-700 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 opacity-10 rotate-12">
+                        <span class="material-icons-round text-8xl text-white">verified_user</span>
+                    </div>
+                    <div class="relative z-10">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <span class="material-icons-round text-blue-400">admin_panel_settings</span>
+                            Panel Approval Manager
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-6">Tinjau laporan ini dan berikan keputusan approval.</p>
+                        
+                        <div class="flex flex-wrap items-center gap-4">
+                            <button type="button" onclick="handleApproval('approve')" 
+                                class="px-8 py-3 bg-green-500 text-white rounded-2xl font-bold hover:bg-green-600 transition-all flex items-center gap-2 shadow-lg shadow-green-500/20">
+                                <span class="material-icons-round">check_circle</span>
+                                Setujui Laporan
+                            </button>
+                            <button type="button" onclick="handleApproval('reject')" 
+                                class="px-8 py-3 bg-red-500 text-white rounded-2xl font-bold hover:bg-red-600 transition-all flex items-center gap-2 shadow-lg shadow-red-500/20">
+                                <span class="material-icons-round">cancel</span>
+                                Tolak Laporan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="approvalActionForm" method="POST" style="display: none;">
+                    @csrf
+                    <input type="hidden" name="note" id="approvalNote">
+                </form>
+            @endif
+
+            <!-- Approval Details (If Processed) -->
+            @if(in_array($report->approval_status, ['approved', 'rejected']))
+                <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex items-start gap-6">
+                    <div class="w-16 h-16 rounded-2xl {{ $report->approval_status == 'approved' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600' }} flex items-center justify-center shrink-0">
+                        <span class="material-icons-round text-3xl">{{ $report->approval_status == 'approved' ? 'verified' : 'unpublished' }}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-black text-gray-800">Informasi Approval</h3>
+                                <p class="text-xs text-gray-400">Diproses oleh Manager pada {{ $report->approved_at->isoFormat('D MMMM Y, HH:mm') }}</p>
+                            </div>
+                            <div class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border {{ $report->approval_status == 'approved' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200' }}">
+                                {{ $report->approval_status }}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nama Approver</label>
+                                <p class="text-sm font-bold text-gray-700">{{ $report->approver->name ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-1">Catatan Manager</label>
+                                <p class="text-sm text-gray-600 italic">{{ $report->approval_note ?: 'Tidak ada catatan.' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
     <script>
         function handleStatusChange(select) {
@@ -172,6 +316,39 @@
             } else {
                 select.form.submit();
             }
+        }
+
+        function handleApproval(action) {
+            const isReject = action === 'reject';
+            
+            Swal.fire({
+                title: isReject ? 'Tolak Laporan' : 'Setujui Laporan',
+                text: isReject ? 'Berikan alasan penolakan agar Admin dapat memperbaiki data:' : 'Berikan catatan (opsional) untuk persetujuan ini:',
+                input: 'textarea',
+                inputPlaceholder: 'Tuliskan catatan di sini...',
+                showCancelButton: true,
+                confirmButtonColor: isReject ? '#ef4444' : '#10b981',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: isReject ? 'Tolak Sekarang' : 'Ya, Setujui',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                inputValidator: (value) => {
+                    if (isReject && (!value || value.length < 5)) {
+                        return 'Alasan penolakan wajib diisi (minimal 5 karakter)!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('approvalActionForm');
+                    const url = action === 'approve' 
+                        ? "{{ route('hr_report.approve', $report->id) }}" 
+                        : "{{ route('hr_report.reject', $report->id) }}";
+                    
+                    form.action = url;
+                    document.getElementById('approvalNote').value = result.value;
+                    form.submit();
+                }
+            });
         }
     </script>
 
