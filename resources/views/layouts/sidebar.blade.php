@@ -238,6 +238,14 @@
                 </div>
                 <span class="font-medium">Report HR</span>
             </a>
+
+            <a href="{{ route('oee.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('oee.index') ? 'bg-blue-600 text-white shadow-lg' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">assessment</span>
+                </div>
+                <span class="font-medium">Report OEE</span>
+            </a>
         @endif
 
     </nav>

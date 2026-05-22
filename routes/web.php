@@ -163,6 +163,15 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | OEE Report
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/report-oee', [\App\Http\Controllers\OeeController::class, 'index'])->name('oee.index');
+    Route::get('/report-oee/excel', [\App\Http\Controllers\OeeController::class, 'exportExcel'])->name('oee.export.excel');
+    Route::get('/report-oee/pdf', [\App\Http\Controllers\OeeController::class, 'exportPdf'])->name('oee.export.pdf');
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit Logs (MR & Direktur Only)
     |--------------------------------------------------------------------------
     */
