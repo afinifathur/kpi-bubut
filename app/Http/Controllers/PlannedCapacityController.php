@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PlannedCapacity;
 use App\Models\MdMachineMirror;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class PlannedCapacityController extends Controller
 {
@@ -50,7 +51,7 @@ class PlannedCapacityController extends Controller
         
         // 4. Generate Virtual Grid Data (Option B - Exception Only)
         list($year, $monthNumber) = explode('-', $month);
-        $daysInMonth = cal_days_in_month(CAL_GREGORIAN, (int)$monthNumber, (int)$year);
+        $daysInMonth = Carbon::create((int)$year, (int)$monthNumber, 1)->daysInMonth;
         
         $startDate = "{$month}-01";
         $endDate = "{$month}-{$daysInMonth}";
