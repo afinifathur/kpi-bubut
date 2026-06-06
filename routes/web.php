@@ -172,6 +172,16 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Planned Capacity Module
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('planned-capacity')->name('planned_capacity.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PlannedCapacityController::class, 'index'])->name('index');
+        Route::post('/save', [\App\Http\Controllers\PlannedCapacityController::class, 'save'])->name('save');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Audit Logs (MR & Direktur Only)
     |--------------------------------------------------------------------------
     */

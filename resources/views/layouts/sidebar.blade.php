@@ -246,6 +246,14 @@
                 </div>
                 <span class="font-medium">Report OEE</span>
             </a>
+
+            <a href="{{ route('planned_capacity.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('planned_capacity.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+                <div class="w-6 flex justify-center">
+                    <span class="material-icons-round text-xl">calendar_today</span>
+                </div>
+                <span class="font-medium">Planned Capacity</span>
+            </a>
         @endif
 
     </nav>

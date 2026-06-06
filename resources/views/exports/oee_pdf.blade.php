@@ -65,6 +65,9 @@
         .text-amber {
             color: #b45309;
         }
+        .text-muted {
+            color: #9ca3af;
+        }
         .footer {
             margin-top: 30px;
             border-top: 1px solid #ddd;
@@ -98,7 +101,8 @@
         <thead>
             <tr>
                 <th>Tanggal</th>
-                <th class="text-right">Total Runtime Mesin (Jam)</th>
+                <th class="text-right">Planned Capacity (Jam)</th>
+                <th class="text-right">Work Hours (Jam)</th>
                 <th class="text-right">Downtime (Jam)</th>
                 <th class="text-right">Target Qty</th>
                 <th class="text-right">Aktual Qty</th>
@@ -111,32 +115,54 @@
         </thead>
         <tbody>
             @foreach($rows as $row)
-                <tr>
+                @php
+                    $isHoliday = $row['planned_capacity'] == 0;
+                    $rowClass = $isHoliday ? 'bg-gray-100 text-muted' : '';
+                @endphp
+                <tr class="{{ $rowClass }}">
                     <td>{{ \Carbon\Carbon::parse($row['date'])->format('d/m/Y') }}</td>
+                    <td class="text-right">{{ number_format($row['planned_capacity'], 2) }}</td>
                     <td class="text-right">{{ number_format($row['work_hours'], 2) }}</td>
                     <td class="text-right text-amber">{{ number_format($row['downtime_hours'], 2) }}</td>
                     <td class="text-right">{{ number_format($row['target_qty']) }}</td>
                     <td class="text-right">{{ number_format($row['actual_qty']) }}</td>
                     <td class="text-right text-red font-bold">{{ number_format($row['reject_qty']) }}</td>
-                    <td class="text-center bg-gray-100">{{ number_format($row['availability'] * 100, 2) }}%</td>
-                    <td class="text-center bg-gray-100">{{ number_format($row['performance'] * 100, 2) }}%</td>
-                    <td class="text-center bg-gray-100">{{ number_format($row['quality'] * 100, 2) }}%</td>
-                    <td class="text-center bg-blue-50 font-bold">{{ number_format($row['oee'] * 100, 2) }}%</td>
+                    <td class="text-center bg-gray-100">
+                        {{ $row['availability'] !== null ? number_format($row['availability'] * 100, 2) . '%' : '-' }}
+                    </td>
+                    <td class="text-center bg-gray-100">
+                        {{ $row['performance'] !== null ? number_format($row['performance'] * 100, 2) . '%' : '-' }}
+                    </td>
+                    <td class="text-center bg-gray-100">
+                        {{ $row['quality'] !== null ? number_format($row['quality'] * 100, 2) . '%' : '-' }}
+                    </td>
+                    <td class="text-center bg-blue-50 font-bold">
+                        {{ $row['oee'] !== null ? number_format($row['oee'] * 100, 2) . '%' : '-' }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr class="font-bold bg-gray-100">
                 <td>TOTAL / RINGKASAN PERIODE</td>
+                <td class="text-right">{{ number_format($summary['planned_capacity'], 2) }}</td>
                 <td class="text-right">{{ number_format($summary['work_hours'], 2) }}</td>
                 <td class="text-right text-amber">{{ number_format($summary['downtime_hours'], 2) }}</td>
                 <td class="text-right">{{ number_format($summary['target_qty']) }}</td>
                 <td class="text-right">{{ number_format($summary['actual_qty']) }}</td>
                 <td class="text-right text-red">{{ number_format($summary['reject_qty']) }}</td>
-                <td class="text-center bg-gray-100">{{ number_format($summary['availability'] * 100, 2) }}%</td>
-                <td class="text-center bg-gray-100">{{ number_format($summary['performance'] * 100, 2) }}%</td>
-                <td class="text-center bg-gray-100">{{ number_format($summary['quality'] * 100, 2) }}%</td>
-                <td class="text-center bg-blue-50">{{ number_format($summary['oee'] * 100, 2) }}%</td>
+                <td class="text-center bg-gray-100">
+                    {{ $summary['availability'] !== null ? number_format($summary['availability'] * 100, 2) . '%' : '-' }}
+                </td>
+                <td class="text-center bg-gray-100">
+                    {{ $summary['performance'] !== null ? number_format($summary['performance'] * 100, 2) . '%' : '-' }}
+                </td>
+                <td class="text-center bg-gray-100">
+                    {{ $summary['quality'] !== null ? number_format($summary['quality'] * 100, 2) . '%' : '-' }}
+                </td>
+                <td class="text-center bg-blue-50">
+                    {{ $summary['oee'] !== null ? number_format($summary['oee'] * 100, 2) . '%' : '-' }}
+                </td>
             </tr>
         </tfoot>
     </table>

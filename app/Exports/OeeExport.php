@@ -27,15 +27,16 @@ class OeeExport implements FromView, ShouldAutoSize, WithColumnFormatting
     public function columnFormats(): array
     {
         return [
-            'B' => '#,##0.00', // Total Runtime Mesin (Jam)
-            'C' => '#,##0.00', // Downtime (Jam)
-            'D' => '#,##0',    // Target Qty
-            'E' => '#,##0',    // Actual Qty
-            'F' => '#,##0',    // Reject Qty
-            'G' => '0.00%',    // Availability (%)
-            'H' => '0.00%',    // Performance (%)
-            'I' => '0.00%',    // Quality (%)
-            'J' => '0.00%',    // OEE (%)
+            'B' => '#,##0.00', // Planned Capacity (Jam)
+            'C' => '#,##0.00', // Work Hours (Jam)
+            'D' => '#,##0.00', // Downtime (Jam)
+            'E' => '#,##0',    // Target Qty
+            'F' => '#,##0',    // Actual Qty
+            'G' => '#,##0',    // Reject Qty
+            'H' => '0.00%',    // Availability (%)
+            'I' => '0.00%',    // Performance (%)
+            'J' => '0.00%',    // Quality (%)
+            'K' => '0.00%',    // OEE (%)
         ];
     }
 }

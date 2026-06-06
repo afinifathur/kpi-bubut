@@ -130,6 +130,11 @@ class OeeController extends Controller
 
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+
+        $today = date('Y-m-d');
+        if ($endDate > $today) {
+            $endDate = $today;
+        }
         $machineCode = $request->input('machine_code');
 
         if ($machineCode === 'all') {
