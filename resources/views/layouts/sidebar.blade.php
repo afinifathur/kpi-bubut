@@ -127,6 +127,14 @@
             <span class="font-medium">KPI Trend</span>
         </a>
 
+        <a href="{{ route('leaderboard.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors {{ request()->routeIs('leaderboard.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-blue-100 hover:bg-white/5 hover:text-white' }}">
+            <div class="w-6 flex justify-center">
+                <span class="material-icons-round text-xl">emoji_events</span>
+            </div>
+            <span class="font-medium">Leaderboard</span>
+        </a>
+
         @if(!$isReadOnly)
             <div class="mt-6 mb-2 px-3 text-[10px] font-semibold text-blue-300 uppercase tracking-wider">Produksi</div>
 

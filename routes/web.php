@@ -41,6 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/operator', [DashboardController::class, 'operatorDashboard'])
         ->name('dashboard.operator');
 
+    Route::get('/leaderboard', [\App\Http\Controllers\LeaderboardController::class, 'index'])
+        ->name('leaderboard.index');
+
     /*
     |--------------------------------------------------------------------------
     | Production
