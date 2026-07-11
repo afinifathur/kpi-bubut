@@ -173,11 +173,13 @@ class DailyReportController extends Controller
 
         $log = ProductionLog::findOrFail($id);
 
+        // Validate ORIGINAL date lock status
         if (\App\Services\DateLockService::isLocked($log->production_date)) {
             abort(403, 'Data sudah dikunci. Tidak dapat mengedit.');
         }
 
         $validated = $request->validate([
+            'production_date' => 'required|date',
             'shift' => 'required|string|max:10',
             'time_start' => 'required|date_format:H:i',
             'time_end' => 'required|date_format:H:i',
@@ -187,6 +189,14 @@ class DailyReportController extends Controller
             'remark' => 'nullable|string|max:50',
             'note' => 'nullable|string|max:255',
         ]);
+
+        // Validate TARGET date lock status
+        if (\App\Services\DateLockService::isLocked($validated['production_date'])) {
+            return back()->withErrors(['production_date' => 'Tanggal target sudah dikunci.'])->withInput();
+        }
+
+        $oldDate = $log->production_date;
+        $newDate = $validated['production_date'];
 
         // Re-calculate work hours
         $startSeconds = strtotime($validated['time_start']);
@@ -220,6 +230,7 @@ class DailyReportController extends Controller
 
         // Update record
         $log->update([
+            'production_date' => $newDate,
             'shift' => $validated['shift'],
             'time_start' => $validated['time_start'],
             'time_end' => $validated['time_end'],
@@ -232,9 +243,15 @@ class DailyReportController extends Controller
             'note' => $validated['note'] ?? null,
         ]);
 
-        // Regenerate KPI
-        \App\Services\DailyKpiService::generateOperatorDaily($log->production_date);
-        \App\Services\DailyKpiService::generateMachineDaily($log->production_date);
+        // Regenerate KPI for new date
+        \App\Services\DailyKpiService::generateOperatorDaily($newDate);
+        \App\Services\DailyKpiService::generateMachineDaily($newDate);
+
+        // Regenerate KPI for old date if changed
+        if ($oldDate !== $newDate) {
+            \App\Services\DailyKpiService::generateOperatorDaily($oldDate);
+            \App\Services\DailyKpiService::generateMachineDaily($oldDate);
+        }
 
         return redirect()
             ->route('daily_report.operator.show', $log->production_date)

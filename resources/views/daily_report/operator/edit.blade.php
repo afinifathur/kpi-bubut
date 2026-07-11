@@ -37,14 +37,7 @@
                     <span class="text-xs text-slate-400 ml-auto">Tidak dapat diubah</span>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="space-y-1.5">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal</label>
-                        <div
-                            class="w-full bg-slate-100 border-transparent rounded-xl text-sm p-3 font-medium text-slate-500">
-                            {{ \Carbon\Carbon::parse($log->production_date)->format('d/m/Y') }}
-                        </div>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Operator</label>
                         <div
@@ -110,8 +103,13 @@
                     <h2 class="font-bold text-lg text-slate-700">Data yang Dapat Diedit</h2>
                 </div>
 
-                {{-- Row 1: Shift, Waktu Mulai, Waktu Selesai --}}
-                <div class="grid grid-cols-3 gap-4 mb-4">
+                {{-- Row 1: Tanggal, Shift, Waktu Mulai, Waktu Selesai --}}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                    <div class="space-y-1.5">
+                        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tanggal</label>
+                        <input type="date" name="production_date" value="{{ $log->production_date }}" required
+                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 font-medium text-slate-700">
+                    </div>
                     <div class="space-y-1.5">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Shift</label>
                         <select name="shift"
