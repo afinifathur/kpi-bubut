@@ -7,6 +7,7 @@ use App\Services\OeeService;
 use App\Models\MdMachineMirror;
 use App\Exports\OeeExport;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -168,6 +169,23 @@ class OeeController extends Controller
         // 6. Fetch OEE dataset directly via centralized OeeService contract
         $reportPackage = $this->oeeService->getOeeReport($startDate, $endDate, $departmentCode, $machineCode);
 
+        // 7. PRESENTATION ONLY — Raw downtime total (all records, regardless of production scope)
+        //    Identical filters to getTopDowntimeReasons() but no GROUP BY / LIMIT.
+        //    Used exclusively to populate the Downtime Analysis informational card.
+        //    Does NOT affect any OEE calculation.
+        $rawDowntimeQuery = DB::table('downtime_logs')
+            ->where('entry_type', 'downtime')
+            ->whereBetween('downtime_date', [$startDate, $endDate])
+            ->where('department_code', $departmentCode)
+            ->whereNotNull('machine_code')
+            ->where('machine_code', '!=', '');
+
+        if ($machineCode !== null) {
+            $rawDowntimeQuery->whereRaw('LOWER(machine_code) = ?', [strtolower(trim($machineCode))]);
+        }
+
+        $rawDowntimeHours = (float) $rawDowntimeQuery->sum('duration_minutes') / 60;
+
         // TASK 3: Inject Audit Metadata into export payload
         return [
             'rows' => $reportPackage['rows'],
@@ -175,6 +193,7 @@ class OeeController extends Controller
             'rowCount' => $reportPackage['row_count'],
             'topDowntimeReasons' => $reportPackage['top_downtime_reasons'],
             'topRejectReasons' => $reportPackage['top_reject_reasons'],
+            'rawDowntimeHours' => $rawDowntimeHours, // PRESENTATION ONLY — raw total for Downtime Analysis card
             'startDate' => $startDate,
             'endDate' => $endDate,
             'selectedMachine' => $machineCode,

@@ -96,6 +96,95 @@
                 <span class="text-lg font-black text-green-900 leading-none">{{ number_format($summary['actual_qty']) }} Pcs</span>
             </div>
         </div>
+
+        {{-- ================================================================
+             DOWNTIME ANALYSIS CARD — INFORMATIONAL ONLY
+             Explains why Downtime OEE ≠ sum of Top Downtime Reasons.
+             No calculation is changed here.
+             ================================================================ --}}
+        @php
+            $oeeDowntime    = $summary['downtime_hours'];
+            $actualDowntime = $rawDowntimeHours;
+            $orphanDowntime = max(0.0, $actualDowntime - $oeeDowntime);
+            $hasGap         = $orphanDowntime > 0.005; // float-safe epsilon
+        @endphp
+        <div class="mb-2.5 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+            {{-- Header strip --}}
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border-b border-gray-100">
+                <svg class="w-3.5 h-3.5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Analisis Downtime</span>
+                <span class="ml-auto text-[9px] text-gray-400 font-medium italic">Informasi cakupan — tidak mempengaruhi perhitungan OEE</span>
+            </div>
+
+            {{-- Three value columns --}}
+            <div class="grid grid-cols-3 divide-x divide-gray-100 px-0">
+
+                {{-- 1. Downtime OEE --}}
+                <div class="flex flex-col justify-center px-4 py-2.5">
+                    <span class="text-[9px] font-bold text-amber-600 uppercase tracking-wider leading-none mb-1">
+                        Downtime OEE
+                    </span>
+                    <span class="text-base font-black text-amber-900 leading-none tabular-nums">
+                        {{ number_format($oeeDowntime, 2) }} Jam
+                    </span>
+                    <span class="text-[9px] text-gray-400 mt-1 leading-snug">
+                        Digunakan dalam perhitungan Availability
+                    </span>
+                </div>
+
+                {{-- 2. Downtime Aktual --}}
+                <div class="flex flex-col justify-center px-4 py-2.5">
+                    <span class="text-[9px] font-bold text-slate-600 uppercase tracking-wider leading-none mb-1">
+                        Downtime Aktual
+                    </span>
+                    <span class="text-base font-black text-slate-800 leading-none tabular-nums">
+                        {{ number_format($actualDowntime, 2) }} Jam
+                    </span>
+                    <span class="text-[9px] text-gray-400 mt-1 leading-snug">
+                        Total seluruh catatan downtime pada periode ini
+                    </span>
+                </div>
+
+                {{-- 3. Di Luar Produksi --}}
+                <div class="flex flex-col justify-center px-4 py-2.5 {{ $hasGap ? 'bg-orange-50' : 'bg-green-50' }}">
+                    <span class="text-[9px] font-bold {{ $hasGap ? 'text-orange-600' : 'text-green-600' }} uppercase tracking-wider leading-none mb-1">
+                        Di Luar Produksi
+                    </span>
+                    <span class="text-base font-black {{ $hasGap ? 'text-orange-800' : 'text-green-700' }} leading-none tabular-nums">
+                        {{ number_format($orphanDowntime, 2) }} Jam
+                    </span>
+                    <span class="text-[9px] {{ $hasGap ? 'text-orange-400' : 'text-green-400' }} mt-1 leading-snug">
+                        @if($hasGap)
+                            Downtime tanpa catatan produksi pada hari &amp; mesin yang sama
+                        @else
+                            Semua downtime tercakup dalam lingkup OEE
+                        @endif
+                    </span>
+                </div>
+
+            </div>
+
+            {{-- Contextual footnote — only shown when there is a gap --}}
+            @if($hasGap)
+                <div class="flex items-start gap-2 px-3 py-1.5 bg-orange-50 border-t border-orange-100">
+                    <svg class="w-3 h-3 text-orange-400 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                              d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                              clip-rule="evenodd"/>
+                    </svg>
+                    <p class="text-[9px] text-orange-600 leading-relaxed">
+                        <strong>Catatan:</strong>
+                        Selisih <strong>{{ number_format($orphanDowntime, 2) }} Jam</strong> merupakan downtime yang tercatat
+                        namun tidak memiliki entri produksi pada hari &amp; mesin yang sama.
+                        Downtime ini sah dan terdokumentasi, tetapi berada di luar cakupan perhitungan Availability OEE.
+                        Nilai OEE, Availability, Performance, dan Quality tidak terpengaruh.
+                    </p>
+                </div>
+            @endif
+        </div>
     @endif
 
     {{-- COLLAPSIBLE VALIDATION PANEL FOR MR/DIREKTUR/ADMIN --}}
