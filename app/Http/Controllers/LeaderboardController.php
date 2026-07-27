@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\DailyKpiOperator;
-use App\Models\MdOperatorMirror;
+use App\Reports\LeaderboardReport;
+use App\Exports\LeaderboardExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
-use Carbon\CarbonPeriod;
 
 class LeaderboardController extends Controller
 {
@@ -39,76 +40,10 @@ class LeaderboardController extends Controller
             ])->with('error', 'Maksimal rentang tanggal adalah 366 hari. Tanggal akhir telah disesuaikan.');
         }
 
-        // Generate the array of dates for the matrix columns
-        $period = CarbonPeriod::create($startDate, $endDate);
-        $dates = [];
-        foreach ($period as $date) {
-            $dates[] = $date->format('Y-m-d');
-        }
-
-        // Query daily KPI records for the selected period
-        // The DailyKpiOperator model automatically applies the global DepartmentScope
-        $query = DailyKpiOperator::with('operator')
-            ->whereBetween('kpi_date', [$startDate, $endDate]);
-
-        if ($operatorCode && $operatorCode !== 'all') {
-            $query->where('operator_code', $operatorCode);
-        }
-
-        $records = $query->get();
-
-        // Group by operator
-        $grouped = $records->groupBy('operator_code');
-        
-        $leaderboardData = [];
-
-        foreach ($grouped as $opCode => $opRecords) {
-            $recordsByDate = $opRecords->keyBy('kpi_date');
-            
-            // Calculate average of available KPI values
-            $activeDaysCount = $opRecords->count();
-            $sumKpi = $opRecords->sum('kpi_percent');
-            $averageKpi = $activeDaysCount > 0 ? ($sumKpi / $activeDaysCount) : 0;
-
-            // Build matrix of daily KPIs
-            $matrix = [];
-            foreach ($dates as $dateStr) {
-                if (isset($recordsByDate[$dateStr])) {
-                    $matrix[$dateStr] = $recordsByDate[$dateStr]->kpi_percent;
-                } else {
-                    $matrix[$dateStr] = null;
-                }
-            }
-
-            // Get operator name from eager-loaded relationship or fall back to code
-            $operatorName = $opRecords->first()->operator->name ?? $opCode;
-
-            $leaderboardData[] = [
-                'operator_code' => $opCode,
-                'operator_name' => $operatorName,
-                'average_kpi' => $averageKpi,
-                'working_days' => $activeDaysCount,
-                'matrix' => $matrix,
-            ];
-        }
-
-        // Sort descending by average KPI with tie-breakers:
-        // 1. Higher Working Days (descending)
-        // 2. Operator Name (ascending)
-        usort($leaderboardData, function ($a, $b) {
-            if (abs($b['average_kpi'] - $a['average_kpi']) > 0.0001) {
-                return $b['average_kpi'] <=> $a['average_kpi'];
-            }
-            
-            if ($b['working_days'] !== $a['working_days']) {
-                return $b['working_days'] <=> $a['working_days'];
-            }
-
-            return strcmp($a['operator_name'], $b['operator_name']);
-        });
-
-        // Get list of all operators for the dropdown filter (same as KPI Trend)
-        $operatorNames = MdOperatorMirror::orderBy('name')->pluck('name', 'code');
+        $report = new LeaderboardReport($request);
+        $dates = $report->getDates();
+        $leaderboardData = $report->getData();
+        $operatorNames = $report->getOperatorNames();
 
         return view('leaderboard.index', [
             'startDate' => $startDate,
@@ -119,4 +54,90 @@ class LeaderboardController extends Controller
             'leaderboardData' => $leaderboardData,
         ]);
     }
+
+    /**
+     * Export leaderboard to PDF.
+     */
+    public function exportPdf(Request $request)
+    {
+        $endDate = $request->get('end_date', date('Y-m-d'));
+        $startDate = $request->get('start_date', Carbon::parse($endDate)->subDays(30)->format('Y-m-d'));
+
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+
+        if ($start->gt($end) || $start->diffInDays($end) > 366) {
+            return redirect()->route('leaderboard.index')->with('error', 'Filter tanggal tidak valid untuk export.');
+        }
+
+        $report = new LeaderboardReport($request);
+        $dates = $report->getDates();
+        $leaderboardData = $report->getData();
+
+        if (empty($leaderboardData)) {
+            return redirect()->back()->with('warning', 'Tidak ada data untuk diexport.');
+        }
+
+        // Calculate columns to determine paper size
+        // totalColumns = summaryColumns (Rank, Name, Code, Avg, Days = 5) + dailyColumns (count($dates))
+        $summaryColumns = 5;
+        $dailyColumns = count($dates);
+        $totalColumns = $summaryColumns + $dailyColumns;
+
+        // Automatically switch to Folio Landscape if too wide (> 20 columns)
+        $paperSize = $totalColumns > 20 ? [0, 0, 612, 936] : 'a4';
+
+        $reportTitle = 'KPI Bubut Leaderboard';
+
+        $pdf = Pdf::loadView('exports.leaderboard_pdf', [
+            'reportTitle' => $reportTitle,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'dates' => $dates,
+            'leaderboardData' => $leaderboardData,
+            'departmentName' => $report->getDepartmentName(),
+            'departmentCode' => $report->getDepartmentCode(),
+            'generated_by' => auth()->user()->name ?? auth()->user()->email,
+            'generated_at' => Carbon::now('Asia/Jakarta')->translatedFormat('d F Y H:i:s'),
+        ]);
+
+        $pdf->setPaper($paperSize, 'landscape');
+        $pdf->setOption('enable_php', true);
+
+        $filename = str_replace(' ', '_', $reportTitle) . '_' . $startDate . '_to_' . $endDate . '.pdf';
+        return $pdf->stream($filename);
+    }
+
+    /**
+     * Export leaderboard to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $endDate = $request->get('end_date', date('Y-m-d'));
+        $startDate = $request->get('start_date', Carbon::parse($endDate)->subDays(30)->format('Y-m-d'));
+
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+
+        if ($start->gt($end) || $start->diffInDays($end) > 366) {
+            return redirect()->route('leaderboard.index')->with('error', 'Filter tanggal tidak valid untuk export.');
+        }
+
+        $report = new LeaderboardReport($request);
+        $dates = $report->getDates();
+        $leaderboardData = $report->getData();
+
+        if (empty($leaderboardData)) {
+            return redirect()->back()->with('warning', 'Tidak ada data untuk diexport.');
+        }
+
+        $reportTitle = 'KPI Bubut Leaderboard';
+        $filename = str_replace(' ', '_', $reportTitle) . '_' . $startDate . '_to_' . $endDate . '.xlsx';
+
+        return Excel::download(
+            new LeaderboardExport($dates, $leaderboardData),
+            $filename
+        );
+    }
 }
+

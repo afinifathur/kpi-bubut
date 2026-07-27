@@ -43,6 +43,10 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/leaderboard', [\App\Http\Controllers\LeaderboardController::class, 'index'])
         ->name('leaderboard.index');
+    Route::get('/leaderboard/export/pdf', [\App\Http\Controllers\LeaderboardController::class, 'exportPdf'])
+        ->name('leaderboard.export.pdf');
+    Route::get('/leaderboard/export/excel', [\App\Http\Controllers\LeaderboardController::class, 'exportExcel'])
+        ->name('leaderboard.export.excel');
 
     /*
     |--------------------------------------------------------------------------

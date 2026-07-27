@@ -75,11 +75,21 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="flex">
+                <div class="flex flex-wrap gap-2">
                     <button type="submit" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wide rounded-md transition-colors shadow-sm h-fit inline-flex items-center gap-1.5">
                         <span class="material-icons-round text-sm">filter_alt</span>
                         Filter
                     </button>
+                    @if(count($leaderboardData) > 0)
+                        <a href="{{ route('leaderboard.export.pdf', request()->query()) }}" target="_blank" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wide rounded-md transition-colors shadow-sm h-fit inline-flex items-center gap-1.5">
+                            <span class="material-icons-round text-sm">picture_as_pdf</span>
+                            Export PDF
+                        </a>
+                        <a href="{{ route('leaderboard.export.excel', request()->query()) }}" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wide rounded-md transition-colors shadow-sm h-fit inline-flex items-center gap-1.5">
+                            <span class="material-icons-round text-sm">description</span>
+                            Export Excel
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>
