@@ -13,6 +13,7 @@ class MdHeatNumberMirror extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'traveler_number',
         'heat_number',
         'kode_produksi',
         'item_code',

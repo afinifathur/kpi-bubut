@@ -2,28 +2,27 @@
 
 namespace App\Services\Integration;
 
-use Illuminate\Support\Facades\DB;
+use App\Models\MdHeatNumberMirror;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class KanbanKtrResolver
 {
-    protected string $connectionName;
+    protected ?string $connectionName;
 
     public function __construct(?string $connectionName = null)
     {
-        $this->connectionName = $connectionName ?? 'kanban';
+        $this->connectionName = $connectionName;
     }
 
     /**
-     * Resolve KTR (Traveler Number) to full production item details.
+     * Resolve KTR (Traveler Number) to full production item details via local mirror.
      *
-     * @param string $ktrCode e.g. "KTR-20260915-0001"
-     * @return array
+     * @param  string  $ktrCode  e.g. "KTR-20260915-0001"
      */
     public function resolve(string $ktrCode): array
     {
-        $cleanKtr = trim($ktrCode);
+        $cleanKtr = strtoupper(trim($ktrCode));
 
         if (empty($cleanKtr)) {
             return [
@@ -34,38 +33,18 @@ class KanbanKtrResolver
         }
 
         try {
-            $row = DB::connection($this->connectionName)
-                ->table('sand_casting_casting_result_lines as l')
-                ->join('sand_casting_casting_results as r', 'r.id', '=', 'l.sand_casting_casting_result_id')
-                ->leftJoin('production_plans as p', 'p.id', '=', 'l.production_plan_id')
-                ->leftJoin('sand_casting_casting_order_lines as ol', 'ol.id', '=', 'l.sand_casting_casting_order_line_id')
-                ->leftJoin('production_plans as ol_p', 'ol_p.id', '=', 'ol.production_plan_id')
-                ->where('l.traveler_number', $cleanKtr)
-                ->select([
-                    'l.id as line_id',
-                    'l.traveler_number',
-                    'l.qty_good',
-                    'r.heat_number',
-                    DB::raw('COALESCE(p.code, ol.code, ol_p.code) as kode_produksi'),
-                    DB::raw('COALESCE(p.item_code, ol_p.item_code) as item_code'),
-                    DB::raw('COALESCE(p.item_name, ol.item_name, ol_p.item_name) as item_name'),
-                    DB::raw('COALESCE(p.size, ol.size, ol_p.size) as size'),
-                    DB::raw('COALESCE(p.customer, ol.customer, ol_p.customer) as customer'),
-                    DB::raw('COALESCE(p.line_number, ol_p.line_number) as line_number'),
-                    DB::raw('COALESCE(p.product_scope, ol_p.product_scope) as product_scope'),
-                ])
-                ->first();
+            $row = MdHeatNumberMirror::where('traveler_number', $cleanKtr)->first();
 
             if (! $row) {
                 return [
                     'success' => false,
                     'error_code' => 'NOT_FOUND',
-                    'message' => "Kitir ({$cleanKtr}) tidak ditemukan di sistem Kanban.",
+                    'message' => "Kitir ({$cleanKtr}) tidak ditemukan di Master Data.",
                 ];
             }
 
             // Validasi Scope Flange (Pilot hanya FLANGE)
-            if (! $this->isFlangeScope($row->product_scope, $row->item_name, $row->item_code)) {
+            if (! $this->isFlangeScope(null, $row->item_name, $row->item_code)) {
                 return [
                     'success' => false,
                     'error_code' => 'OUT_OF_SCOPE',
@@ -74,7 +53,7 @@ class KanbanKtrResolver
             }
 
             // Format Line Number (e.g. 1 -> "LINE 1")
-            $formattedLine = $this->formatLineNumber($row->line_number);
+            $formattedLine = $this->formatLineNumber($row->line);
 
             return [
                 'success' => true,
@@ -86,20 +65,20 @@ class KanbanKtrResolver
                     'item_name' => $row->item_name ? trim((string) $row->item_name) : null,
                     'size' => $row->size ? trim((string) $row->size) : '-',
                     'customer' => $row->customer ? trim((string) $row->customer) : '-',
-                    'line' => $formattedLine ?? '-',
-                    'qty_cor' => (int) $row->qty_good,
+                    'line' => $formattedLine ?? ($row->line ?: '-'),
+                    'qty_cor' => (int) $row->cor_qty,
                 ],
             ];
         } catch (Throwable $e) {
-            Log::error('[KanbanKtrResolver:ERROR] Failed to resolve KTR: ' . $e->getMessage(), [
+            Log::error('[KanbanKtrResolver:ERROR] Failed to resolve KTR: '.$e->getMessage(), [
                 'ktr' => $cleanKtr,
                 'exception' => get_class($e),
             ]);
 
             return [
                 'success' => false,
-                'error_code' => 'CONNECTION_ERROR',
-                'message' => 'Gagal menghubungkan ke data Kanban: ' . $e->getMessage(),
+                'error_code' => 'INTERNAL_ERROR',
+                'message' => 'Gagal memproses data Kitir: '.$e->getMessage(),
             ];
         }
     }
@@ -144,6 +123,6 @@ class KanbanKtrResolver
             return strtoupper($str);
         }
 
-        return 'LINE ' . $str;
+        return 'LINE '.$str;
     }
 }
