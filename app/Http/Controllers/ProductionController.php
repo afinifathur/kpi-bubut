@@ -135,10 +135,13 @@ class ProductionController extends Controller
             ? round(($actualQty / $targetQty) * 100, 2)
             : 0;
 
-        // Fetch Heat Number details if exists
+        // Fetch Heat Number details if exists (Multi-item Heat safety)
         $heatNumberDetails = null;
         if (!empty($validated['heat_number'])) {
-            $heatNumberDetails = \App\Models\MdHeatNumberMirror::where('heat_number', $validated['heat_number'])->first();
+            $heatNumberDetails = \App\Models\MdHeatNumberMirror::where('heat_number', $validated['heat_number'])
+                ->where('item_code', $validated['item_code'])
+                ->first()
+                ?? \App\Models\MdHeatNumberMirror::where('heat_number', $validated['heat_number'])->first();
         }
 
         /**

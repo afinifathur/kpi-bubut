@@ -7,8 +7,39 @@ use App\Models\MdItemMirror;
 use App\Models\MdOperatorMirror;
 use App\Models\MdMachineMirror;
 
+use App\Services\Integration\KanbanKtrResolver;
+
 class AutocompleteController extends Controller
 {
+    protected KanbanKtrResolver $ktrResolver;
+
+    public function __construct(KanbanKtrResolver $ktrResolver)
+    {
+        $this->ktrResolver = $ktrResolver;
+    }
+
+    /**
+     * Resolve KTR Code (Traveler Barcode) via Kanban service
+     */
+    public function resolveKtr(Request $request)
+    {
+        $code = $request->get('code') ?? $request->get('ktr') ?? '';
+        $result = $this->ktrResolver->resolve((string) $code);
+
+        if (!($result['success'] ?? false)) {
+            $statusCode = match ($result['error_code'] ?? '') {
+                'OUT_OF_SCOPE' => 422,
+                'EMPTY_CODE' => 400,
+                'NOT_FOUND' => 404,
+                default => 500,
+            };
+
+            return response()->json($result, $statusCode);
+        }
+
+        return response()->json($result);
+    }
+
     /**
      * Search Items
      * Returns JSON list of items matching the query.

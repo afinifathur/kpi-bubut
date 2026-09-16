@@ -127,6 +127,20 @@ return [
 		'engine' => 'InnoDB',
 		],
 
+		'kanban' => [
+		'driver' => 'mysql',
+		'host' => env('KANBAN_DB_HOST', env('DB_HOST', '127.0.0.1')),
+		'port' => env('KANBAN_DB_PORT', env('DB_PORT', '3306')),
+		'database' => env('KANBAN_DB_DATABASE', 'kanban-ppic'),
+		'username' => env('KANBAN_DB_USERNAME', env('DB_USERNAME', 'root')),
+		'password' => env('KANBAN_DB_PASSWORD', env('DB_PASSWORD', '')),
+		'charset' => 'utf8mb4',
+		'collation' => 'utf8mb4_unicode_ci',
+		'prefix' => '',
+		'strict' => true,
+		'engine' => 'InnoDB',
+		],
+
 
     ],
 
