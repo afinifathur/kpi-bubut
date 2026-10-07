@@ -154,8 +154,8 @@
                             {{-- Button Scan Kitir (Primary) --}}
                             <button type="button" @click="startScanner()"
                                 class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-transform active:scale-[0.98] min-h-[48px]">
-                                <span class="material-icons-round text-xl">photo_camera</span>
-                                <span>Scan Kitir (Barcode)</span>
+                                <span class="material-icons-round text-xl">qr_code_scanner</span>
+                                <span>Scan Kitir (QR / Barcode)</span>
                             </button>
 
                             {{-- Button Manual Search Toggle --}}
@@ -396,7 +396,7 @@
                 <div class="p-4 border-b border-slate-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="material-icons-round text-blue-400">qr_code_scanner</span>
-                        <h3 class="font-bold text-sm sm:text-base">Pindai Barcode Kitir</h3>
+                        <h3 class="font-bold text-sm sm:text-base">Pindai QR / Barcode Kitir</h3>
                     </div>
                     <button type="button" @click="stopScanner()" class="text-slate-400 hover:text-white p-1 rounded-lg">
                         <span class="material-icons-round text-2xl">close</span>
@@ -407,9 +407,9 @@
                 <div class="relative bg-black flex-1 min-h-[280px] sm:min-h-[320px] flex items-center justify-center overflow-hidden">
                     <video id="scanner-video" autoplay playsinline muted class="w-full h-full object-cover"></video>
                     
-                    {{-- Scanning Rect Viewfinder --}}
+                    {{-- Scanning Rect Viewfinder (Accommodates both square QR & horizontal Barcode) --}}
                     <div class="absolute inset-0 flex items-center justify-center p-6 pointer-events-none">
-                        <div class="w-64 h-44 sm:w-72 sm:h-48 border-2 border-blue-400 rounded-2xl relative shadow-lg shadow-blue-500/20">
+                        <div class="w-64 h-56 sm:w-72 sm:h-64 border-2 border-blue-400 rounded-2xl relative shadow-lg shadow-blue-500/20">
                             {{-- Laser line animation --}}
                             <div class="absolute inset-x-0 top-0 h-0.5 bg-red-500 shadow-sm shadow-red-500 animate-pulse"></div>
                             <div class="absolute -top-1 -left-1 w-4 h-4 border-t-4 border-l-4 border-blue-500 rounded-tl"></div>
@@ -421,7 +421,7 @@
 
                     {{-- Scanning Status Overlay --}}
                     <div class="absolute bottom-3 inset-x-3 bg-black/60 backdrop-blur-sm py-2 px-3 rounded-xl text-center text-xs text-blue-200">
-                        <span x-text="scannerStatusText">Arahkan kamera ke Barcode Code128 pada Kitir (KTR)...</span>
+                        <span x-text="scannerStatusText">Arahkan kamera ke QR Code atau Barcode pada Kitir (KTR)...</span>
                     </div>
 
                     {{-- Camera Loading / Error State --}}
@@ -592,7 +592,7 @@
                 scannerStream: null,
                 scannerInterval: null,
                 isResolvingKtr: false,
-                scannerStatusText: 'Arahkan kamera ke Barcode Code128 pada Kitir (KTR)...',
+                scannerStatusText: 'Arahkan kamera ke QR Code atau Barcode pada Kitir (KTR)...',
                 cameraError: false,
                 cameraErrorMessage: '',
                 resolvedKtr: '',
@@ -655,7 +655,7 @@
                             video.srcObject = this.scannerStream;
                             await video.play();
 
-                            this.scannerStatusText = 'Memindai barcode Kitir (Code128)...';
+                            this.scannerStatusText = 'Memindai QR / Barcode Kitir...';
                             this.startBarcodeDetection(video);
 
                         } catch (err) {
@@ -702,7 +702,7 @@
                         requestAnimationFrame(detectFrame);
                     } else {
                         // Fallback detection using video canvas snapshot if native BarcodeDetector not available
-                        this.scannerStatusText = 'Memindai barcode (mode kompatibel)...';
+                        this.scannerStatusText = 'Memindai QR / Barcode (mode kompatibel)...';
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
 

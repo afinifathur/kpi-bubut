@@ -71,6 +71,31 @@ class KanbanKtrResolverTest extends TestCase
             $table->index('item_code');
         });
 
+        Schema::dropIfExists('production_logs');
+        Schema::create('production_logs', function (Blueprint $table) {
+            $table->id();
+            $table->string('department_code')->nullable();
+            $table->date('production_date');
+            $table->string('shift')->nullable();
+            $table->string('operator_code');
+            $table->string('machine_code');
+            $table->string('item_code');
+            $table->string('heat_number')->nullable();
+            $table->string('size')->nullable();
+            $table->string('customer')->nullable();
+            $table->string('line')->nullable();
+            $table->time('time_start');
+            $table->time('time_end');
+            $table->decimal('work_hours', 5, 2)->default(0);
+            $table->integer('cycle_time_used_sec')->default(0);
+            $table->integer('target_qty')->default(0);
+            $table->integer('actual_qty')->default(0);
+            $table->decimal('achievement_percent', 5, 2)->default(0);
+            $table->string('remark')->nullable();
+            $table->text('note')->nullable();
+            $table->timestamps();
+        });
+
         Schema::dropIfExists('md_heat_numbers_mirror');
         Schema::create('md_heat_numbers_mirror', function (Blueprint $table) {
             $table->id();
@@ -487,5 +512,194 @@ class KanbanKtrResolverTest extends TestCase
         $this->assertTrue($result['success']);
         $this->assertEquals('KTR-20260915-0001', $result['data']['ktr']);
         $this->assertEquals('ABB194', $result['data']['kode_produksi']);
+    }
+
+    /**
+     * SCANNER TEST 1: Barcode lama tetap berhasil
+     */
+    public function test_scanner_test_1_legacy_barcode_succeeds(): void
+    {
+        $resolver = new KanbanKtrResolver;
+        $legacyBarcodeValue = 'KTR-20260915-0001';
+
+        $result = $resolver->resolve($legacyBarcodeValue);
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('KTR-20260915-0001', $result['data']['ktr']);
+        $this->assertEquals('A214092601', $result['data']['heat_number']);
+        $this->assertEquals('ABB194', $result['data']['kode_produksi']);
+        $this->assertEquals('4.101105K.A0032', $result['data']['item_code']);
+    }
+
+    /**
+     * SCANNER TEST 2: QR Code terbaru berhasil
+     */
+    public function test_scanner_test_2_latest_qr_code_succeeds(): void
+    {
+        $user = User::factory()->create();
+        $latestQrCodePayload = 'KTR-20260915-0001';
+
+        $response = $this->actingAs($user)->getJson('/api/resolve/ktr?code='.$latestQrCodePayload);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'ktr' => 'KTR-20260915-0001',
+                    'heat_number' => 'A214092601',
+                    'kode_produksi' => 'ABB194',
+                    'item_code' => '4.101105K.A0032',
+                    'item_name' => 'SS304 JIS 5K 1-1/4"',
+                    'size' => '1-1/4"',
+                    'customer' => 'A06',
+                    'line' => 'LINE 1',
+                    'qty_cor' => 77,
+                ],
+            ]);
+    }
+
+    /**
+     * SCANNER TEST 3: QR dan barcode yang merepresentasikan KTR yang sama menghasilkan lookup yang sama
+     */
+    public function test_scanner_test_3_qr_and_barcode_produce_identical_lookup(): void
+    {
+        $resolver = new KanbanKtrResolver;
+        $barcodePayload = 'KTR-20260915-0002';
+        $qrPayload = 'KTR-20260915-0002';
+
+        $barcodeResult = $resolver->resolve($barcodePayload);
+        $qrResult = $resolver->resolve($qrPayload);
+
+        $this->assertEquals($barcodeResult, $qrResult);
+        $this->assertEquals('KTR-20260915-0002', $qrResult['data']['ktr']);
+        $this->assertEquals('ABB195', $qrResult['data']['kode_produksi']);
+    }
+
+    /**
+     * SCANNER TEST 4: QR dengan whitespace/newline aman setelah normalization
+     */
+    public function test_scanner_test_4_qr_with_whitespace_and_newline_normalized_safely(): void
+    {
+        $user = User::factory()->create();
+        $qrWithWhitespace = "  \r\n\tKTR-20260915-0001\r\n  ";
+
+        $response = $this->actingAs($user)->getJson('/api/resolve/ktr?code='.urlencode($qrWithWhitespace));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'ktr' => 'KTR-20260915-0001',
+                    'heat_number' => 'A214092601',
+                    'kode_produksi' => 'ABB194',
+                ],
+            ]);
+    }
+
+    /**
+     * SCANNER TEST 5: KTR valid format tetapi tidak ada di md_heat_numbers_mirror: error behavior tetap berjalan
+     */
+    public function test_scanner_test_5_valid_ktr_not_in_mirror_returns_not_found(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/resolve/ktr?code=KTR-20260915-9999');
+
+        $response->assertStatus(404)
+            ->assertJson([
+                'success' => false,
+                'error_code' => 'NOT_FOUND',
+                'message' => 'Kitir (KTR-20260915-9999) tidak ditemukan di Master Data.',
+            ]);
+    }
+
+    /**
+     * SCANNER TEST 6: Invalid QR payload ditolak dengan aman
+     */
+    public function test_scanner_test_6_invalid_qr_payload_rejected_safely(): void
+    {
+        $user = User::factory()->create();
+
+        // A. Empty string
+        $resEmpty = $this->actingAs($user)->getJson('/api/resolve/ktr?code=');
+        $resEmpty->assertStatus(400)
+            ->assertJson([
+                'success' => false,
+                'error_code' => 'EMPTY_CODE',
+            ]);
+
+        // B. Out of scope fitting item
+        $resOutOfScope = $this->actingAs($user)->getJson('/api/resolve/ktr?code=KTR-20260915-0003');
+        $resOutOfScope->assertStatus(422)
+            ->assertJson([
+                'success' => false,
+                'error_code' => 'OUT_OF_SCOPE',
+            ]);
+    }
+
+    /**
+     * SCANNER TEST 7: Manual Heat search tetap berfungsi
+     */
+    public function test_scanner_test_7_manual_heat_search_continues_to_function(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/search/heat-numbers?q=A214092601');
+
+        $response->assertStatus(200);
+        $json = $response->json();
+        $this->assertNotEmpty($json);
+        $this->assertEquals('A214092601', $json[0]['heat_number']);
+    }
+
+    /**
+     * SCANNER TEST 8: Scan QR tidak membuat production record baru
+     */
+    public function test_scanner_test_8_scan_qr_does_not_create_production_record(): void
+    {
+        $user = User::factory()->create();
+        $initialCount = \App\Models\ProductionLog::count();
+
+        $response1 = $this->actingAs($user)->getJson('/api/resolve/ktr?code=KTR-20260915-0001');
+        $response1->assertStatus(200);
+
+        // Scan duplicate / second time
+        $response2 = $this->actingAs($user)->getJson('/api/resolve/ktr?code=KTR-20260915-0001');
+        $response2->assertStatus(200);
+
+        $afterCount = \App\Models\ProductionLog::count();
+        $this->assertEquals($initialCount, $afterCount);
+    }
+
+    /**
+     * SCANNER TEST 9: qty_cor tidak otomatis menjadi Bubut Hasil OK
+     */
+    public function test_scanner_test_9_qty_cor_is_distinct_and_not_actual_qty(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson('/api/resolve/ktr?code=KTR-20260915-0001');
+        $response->assertStatus(200);
+
+        $data = $response->json('data');
+        $this->assertArrayHasKey('qty_cor', $data);
+        $this->assertEquals(77, $data['qty_cor']);
+        $this->assertArrayNotHasKey('actual_qty', $data);
+    }
+
+    /**
+     * SCANNER TEST 10: Existing /production/create prefill tetap sama setelah scan
+     */
+    public function test_scanner_test_10_production_create_renders_with_scanner_ui(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/production/create');
+
+        $response->assertStatus(200);
+        $response->assertSee('Input Hasil Produksi');
+        $response->assertSee('Scan Kitir (QR / Barcode)');
+        $response->assertSee('Pindai QR / Barcode Kitir');
+        $response->assertSee('Gunakan Kitir');
     }
 }

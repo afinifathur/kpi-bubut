@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\MdItemMirror;
-use App\Models\MdOperatorMirror;
 use App\Models\MdMachineMirror;
-
+use App\Models\MdOperatorMirror;
 use App\Services\Integration\KanbanKtrResolver;
+use Illuminate\Http\Request;
 
 class AutocompleteController extends Controller
 {
@@ -19,14 +18,14 @@ class AutocompleteController extends Controller
     }
 
     /**
-     * Resolve KTR Code (Traveler Barcode) via Kanban service
+     * Resolve KTR Code (Traveler QR / Barcode) via Kanban service
      */
     public function resolveKtr(Request $request)
     {
         $code = $request->get('code') ?? $request->get('ktr') ?? '';
         $result = $this->ktrResolver->resolve((string) $code);
 
-        if (!($result['success'] ?? false)) {
+        if (! ($result['success'] ?? false)) {
             $statusCode = match ($result['error_code'] ?? '') {
                 'OUT_OF_SCOPE' => 422,
                 'EMPTY_CODE' => 400,
@@ -92,6 +91,7 @@ class AutocompleteController extends Controller
 
         return response()->json($operators);
     }
+
     /**
      * Search Machines
      * Returns JSON list of machines matching the query.
@@ -148,10 +148,10 @@ class AutocompleteController extends Controller
             ->where('cycle_time_used_sec', '>', 0)
             ->avg('cycle_time_used_sec');
 
-        if (!$avgSeconds) {
+        if (! $avgSeconds) {
             return response()->json([
                 'average_seconds' => 0,
-                'formatted' => 'Belum ada data'
+                'formatted' => 'Belum ada data',
             ]);
         }
 
@@ -161,7 +161,7 @@ class AutocompleteController extends Controller
 
         return response()->json([
             'average_seconds' => $avgSeconds,
-            'formatted' => "{$minutes}m {$seconds}s"
+            'formatted' => "{$minutes}m {$seconds}s",
         ]);
     }
 }
