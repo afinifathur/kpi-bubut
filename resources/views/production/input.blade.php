@@ -34,7 +34,7 @@
                     {{-- Tanggal --}}
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tanggal</label>
-                        <input type="date" name="production_date" value="{{ date('Y-m-d', strtotime('-1 day')) }}"
+                        <input type="date" name="production_date" value="{{ date('Y-m-d') }}"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm p-3 font-medium text-slate-700 min-h-[46px]">
                     </div>
 
